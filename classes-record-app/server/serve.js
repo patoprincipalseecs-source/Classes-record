@@ -944,7 +944,7 @@ async function handleApi(method, pathname, req, res) {
           if (timeMatch[3].toUpperCase() === 'AM' && h === 12) h = 0;
           hourNum = h;
         }
-        const sortKey = dayNum * 100 + hourNum;
+        const sortKey = hourNum * 60;  // minutes format for grid display
         await db.query(
           "INSERT INTO public.weekly_schedule (faculty, subject, class_name, dept, day, location, time_start, time_end, lec_lab, elective, user_email, sort_key, schedule_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)",
           [faculty, subject, className, dept, day, location, timeStart, timeEnd, lecLab, elective, userEmail, sortKey, (scheduleId ? parseInt(scheduleId) : null)]
