@@ -1244,6 +1244,18 @@ async function handleApi(method, pathname, req, res) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  // POST /api/reassign-entries — reassign orphan entries to a schedule
+  if (method === "POST" && pathname === "/api/reassign-entries") {
+    const { ids, scheduleId } = body;
+    try {
+      const result = await db.query(
+        "UPDATE public.weekly_schedule SET schedule_id=$1 WHERE id=ANY($2::int[])",
+        [parseInt(scheduleId), ids]
+      );
+      return json(res, 200, { success: true, updated: result.rowCount });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   // POST /api/fix-sortkeys — fix bad sort_key values
   if (method === "POST" && pathname === "/api/fix-sortkeys") {
     const { scheduleId } = body;
