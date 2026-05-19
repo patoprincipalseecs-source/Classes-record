@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import * as FileSystem from "expo-file-system";
+// expo-file-system removed - using fetch API for web compatibility
 
 const colors = { primary:"#1565C0", success:"#2E7D32", bg:"#F5F7FA", card:"#fff", text:"#1a1a2e", muted:"#6B7280", purple:"#6A1B9A" };
 
@@ -222,7 +222,9 @@ export default function ScheduleGenerator() {
       if (res.canceled) return;
       const uri = res.assets[0].uri;
       setFileName(res.assets[0].name);
-      const text = await FileSystem.readAsStringAsync(uri);
+      // Use fetch to read file - works on both web and native
+      const response = await fetch(uri);
+      const text = await response.text();
       const lines = text.split(/\r?\n/).filter(l => l.trim());
       const headers = lines[0].split(",").map(h => h.trim().replace(/\r/,""));
       const data = lines.slice(1).map(line => {
@@ -254,7 +256,9 @@ export default function ScheduleGenerator() {
     if (!generated.length || !params.scheduleId) return;
     setImporting(true);
     try {
-      const domain = process.env.EXPO_PUBLIC_DOMAIN;
+      const domain = process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com";
+      // Wake up Render free tier if sleeping
+      try { await fetch(`https://${domain}/api/health`, { signal: AbortSignal.timeout(5000) }); } catch {}
       const res = await fetch(`https://${domain}/api/import/schedule`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

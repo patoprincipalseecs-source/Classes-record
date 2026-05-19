@@ -1244,6 +1244,15 @@ async function handleApi(method, pathname, req, res) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  // POST /api/fix-sortkeys — fix bad sort_key values
+  if (method === "POST" && pathname === "/api/fix-sortkeys") {
+    const { scheduleId } = body;
+    try {
+      const result = await db.query("UPDATE public.weekly_schedule SET sort_key = CAST(CASE WHEN time_start ~ '^([0-9]+)' THEN (CASE WHEN time_start LIKE '%PM' AND CAST(substring(time_start, 1, strpos(time_start, ':')-1) AS INT) != 12 THEN (CAST(substring(time_start, 1, strpos(time_start, ':')-1) AS INT)+12)*60 ELSE CAST(substring(time_start, 1, strpos(time_start, ':')-1) AS INT)*60 END) ELSE sort_key END AS INT) WHERE schedule_id = $1 AND sort_key < 60", [parseInt(scheduleId)]);
+      return json(res, 200, { success: true, updated: result.rowCount });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   // POST /api/import/schedule — JSON bulk import (rows with camelCase or CSV column names)
   if (method === "POST" && pathname === "/api/import/schedule") {
     try {

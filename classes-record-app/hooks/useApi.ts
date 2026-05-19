@@ -214,6 +214,28 @@ async function buildFormData(uri: string, name: string, mimeType: string, file?:
 }
 
 export async function importScheduleExcel(uri: string, name: string, mimeType: string, scheduleId?: number, file?: File) {
+  // Handle CSV files directly via JSON endpoint
+  const isCSV = name?.toLowerCase().endsWith('.csv') || mimeType === 'text/csv' || mimeType === 'text/plain';
+  if (isCSV && file) {
+    try {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const rows = lines.slice(1).map(line => {
+        const vals = line.match(/(".*?"|[^,]+)(?=,|$)/g) || line.split(',');
+        const obj: Record<string,string> = {};
+        headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim().replace(/^"|"$/g, ''); });
+        return obj;
+      }).filter(r => Object.values(r).some(v => v));
+      const res = await fetch(`${API_BASE}/import/schedule`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows, scheduleId })
+      });
+      return res.json();
+    } catch(e: any) { return { success: false, error: e.message }; }
+  }
+  // Handle XLSX files
   const formData = await buildFormData(uri, name, mimeType, file);
   const url = scheduleId != null
     ? `${API_BASE}/import/schedule/xlsx?scheduleId=${scheduleId}`
