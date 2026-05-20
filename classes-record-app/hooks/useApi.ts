@@ -320,8 +320,10 @@ export async function fetchRoster(scheduleId: number, className: string) {
   try {
     const res = await fetch(`${API_BASE}/attendance/roster?scheduleId=${scheduleId}&className=${encodeURIComponent(className)}`);
     const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch { return []; }
+    if (data && data.dates !== undefined) return data;
+    if (Array.isArray(data)) return { dates: [], rows: data };
+    return { dates: [], rows: [] };
+  } catch { return { dates: [], rows: [] }; }
 }
 
 export async function fetchStudentAttendanceSummary(scheduleId: number, className: string): Promise<StudentAttendanceSummary[]> {

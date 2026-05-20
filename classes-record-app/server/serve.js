@@ -1068,17 +1068,29 @@ async function handleApi(method, pathname, req, res) {
     if (!scheduleId || !className) return json(res, 400, { error: "scheduleId and className required" });
     try {
       const r = await db.query(
-        `SELECT a.student_id, a.date, a.session_time, a.status, s.roll_no, s.name
+        `SELECT a.student_id, a.date, a.session_time, a.status,
+                COALESCE(s.roll_no, '') as roll_no, COALESCE(s.name, '') as name
          FROM public.attendance a
-         JOIN public.students s ON s.id = a.student_id
+         LEFT JOIN public.students s ON s.id = a.student_id
          WHERE a.schedule_id=$1 AND a.class_name=$2
          ORDER BY a.date, a.session_time, s.roll_no`,
         [parseInt(scheduleId), className]
       );
-      return json(res, 200, r.rows.map(row => ({
-        studentId: row.student_id, date: row.date, sessionTime: row.session_time,
-        status: row.status, rollNo: row.roll_no, name: row.name
-      })));
+      // Also return students list for this class
+      const stu = await db.query(
+        `SELECT id, roll_no, name, email FROM public.students
+         WHERE schedule_id=$1 AND class_name=$2 ORDER BY roll_no`,
+        [parseInt(scheduleId), className]
+      );
+      const dates = [...new Set(r.rows.map(row => row.date?.toISOString?.()?.slice(0,10) || String(row.date).slice(0,10)))].sort();
+      return json(res, 200, {
+        dates,
+        students: stu.rows.map(s => ({ id: s.id, rollNo: s.roll_no, name: s.name, email: s.email })),
+        rows: r.rows.map(row => ({
+          studentId: row.student_id, date: row.date?.toISOString?.()?.slice(0,10) || String(row.date).slice(0,10),
+          sessionTime: row.session_time, status: row.status, rollNo: row.roll_no, name: row.name
+        }))
+      });
     } catch(e) { return json(res, 500, { error: String(e) }); }
   }
 
