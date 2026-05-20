@@ -1219,7 +1219,17 @@ async function handleApi(method, pathname, req, res) {
         if (busyRecs.length===0) free.push({name,dept});
         else busy.push({name,dept,records:busyRecs});
       }
-      return json(res, 200, {date,dayName,start,end,free,busy,summary:{}});
+      // Calculate department summary
+      const summary = {};
+      for (const f of free) {
+        if (!summary[f.dept]) summary[f.dept] = {free:0, busy:0};
+        summary[f.dept].free++;
+      }
+      for (const b of busy) {
+        if (!summary[b.dept]) summary[b.dept] = {free:0, busy:0};
+        summary[b.dept].busy++;
+      }
+      return json(res, 200, {date,dayName,start,end,free,busy,summary});
     } catch(e) { return json(res, 500, {error:e.message}); }
   }
 
