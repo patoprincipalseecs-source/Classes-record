@@ -56,6 +56,8 @@ export default function EntryScreen() {
   const qc = useQueryClient();
   const { user, login } = useAuth();
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const scheduleId = params.scheduleId ? parseInt(String(params.scheduleId)) : undefined;
 
   useFocusEffect(
     useCallback(() => {
@@ -92,8 +94,8 @@ export default function EntryScreen() {
   const [activePicker, setActivePicker] = useState<PickerField>(null);
   const [showImport, setShowImport] = useState(false);
 
-  const { data: schedule = [] } = useQuery({ queryKey: ["schedule"], queryFn: fetchSchedule });
-  const { data: options } = useQuery<ScheduleOptions>({ queryKey: ["options"], queryFn: fetchOptions });
+  const { data: schedule = [] } = useQuery({ queryKey: ["schedule", scheduleId], queryFn: () => fetchSchedule(scheduleId) });
+  const { data: options } = useQuery<ScheduleOptions>({ queryKey: ["options", scheduleId], queryFn: () => fetchOptions(scheduleId) });
 
   const facultyList = useMemo(() => {
     const fromDB = [...new Set(schedule.filter((r) => !r.Type).map((r) => r.Faculty))].sort();
@@ -132,8 +134,18 @@ export default function EntryScreen() {
       return { startSlots: start, endSlots: [], locationSlots: locs };
     } else {
       const allBusyHours = schedule.filter((r) => {
+        // Block hours where this class is scheduled on this day
         if (!r.Type && r.Day === selectedDay && r.Class === cls) return true;
+        // Block hours where this faculty is scheduled on this day
+        if (!r.Type && r.Day === selectedDay && r.Faculty === faculty) return true;
+        // Block makeup classes for same class on same date
         if (r.Type === "Makeup" && r.Class === cls && r.EntryDate) {
+          const d = new Date(r.EntryDate);
+          const s = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+          return s === date;
+        }
+        // Block makeup classes for same faculty on same date
+        if (r.Type === "Makeup" && r.Faculty === faculty && r.EntryDate) {
           const d = new Date(r.EntryDate);
           const s = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
           return s === date;
@@ -415,7 +427,7 @@ export default function EntryScreen() {
         <TouchableOpacity
           style={[s.saveBtn, !canSave && s.saveBtnDisabled]}
           disabled={!canSave}
-          onPress={() => saveMutation.mutate({ Faculty: faculty, Subject: subject, Class: cls, Date: date, Location: location, Time: startTime, EndTime: endTime, Type: type, User: user! })}
+          onPress={() => saveMutation.mutate({ Faculty: faculty, Subject: subject, Class: cls, Date: date, Location: location, Time: startTime, EndTime: endTime, Type: type, User: user!, scheduleId })}
         >
           {saveMutation.isPending
             ? <ActivityIndicator color="#fff" />

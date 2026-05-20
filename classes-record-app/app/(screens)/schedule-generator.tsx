@@ -306,7 +306,21 @@ export default function ScheduleGenerator() {
         {!!error && <View style={s.errBox}><Text style={s.errTxt}>{error}</Text></View>}
 
         <View style={s.card}>
-          <TouchableOpacity style={[s.btn,{backgroundColor:colors.primary}]} onPress={handleUpload}>
+          <TouchableOpacity style={[s.btn,{backgroundColor:"#1565C0",marginBottom:8}]} onPress={()=>{
+        if(typeof document!=="undefined"){
+          const csv=["Subject Code,Subjects,Department,Instructor Name with Sections,Regular/Elective,Class,Credit Hrs,Break Time","OTM455,Engineering Project Management,HU,Mr. Talha Aleem Khawja (ABCD),Regular,BEE-6,2+0,1300-1400","HU212,Technical & Business Writing,HU,Ms. Komal Malik (ABCD),Regular,BEE-6,2+0,1300-1400","EE342,Microwave Engineering,EE,Mr. Ahsan Azhar (A),Regular,BEE-6,3+1,1300-1400"].join("\n");
+          const blob=new Blob([csv],{type:"text/csv"});
+          const url=URL.createObjectURL(blob);
+          const a=document.createElement("a");
+          a.href=url;a.download="Draft_Schedule.csv";
+          document.body.appendChild(a);a.click();
+          document.body.removeChild(a);URL.revokeObjectURL(url);
+        }
+      }}>
+        <Feather name="download" size={16} color="#fff"/>
+        <Text style={[s.btnTxt,{color:"#fff"}]}>Download Draft</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[s.btn,{backgroundColor:colors.primary}]} onPress={handleUpload}>
             <Feather name="upload" size={16} color="#fff"/>
             <Text style={[s.btnTxt,{color:"#fff"}]}>{fileName||"Upload Draft CSV"}</Text>
           </TouchableOpacity>

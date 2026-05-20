@@ -311,14 +311,26 @@ export default function ScheduleScreen() {
 
     const cellHtml = (entries: ScheduleRow[]) => {
       if (entries.length === 0) return `<span class="free">—</span>`;
-      return entries.map((e) => `
-        <div class="card${e.Type === "Makeup" ? " makeup" : ""}">
+      const today = new Date(); today.setHours(0,0,0,0);
+      return entries.map((e) => {
+        const isMakeup = e.Type === "Makeup";
+        const makeupDate = isMakeup && e.EntryDate ? new Date(e.EntryDate) : null;
+        if (makeupDate) makeupDate.setHours(0,0,0,0);
+        const isFuture = makeupDate ? makeupDate >= today : true;
+        if (isMakeup && !isFuture) return ""; // skip past makeup
+        const dateLabel = makeupDate && isFuture
+          ? `<span style="font-size:9px;background:#FF6F00;color:#fff;border-radius:3px;padding:1px 4px;margin-bottom:2px;display:block;">${makeupDate.toLocaleDateString("en-GB",{day:"2-digit",month:"short"})}</span>`
+          : "";
+        return `
+        <div class="card${isMakeup ? " makeup" : ""}">
+          ${dateLabel}
           <div class="subj">${e.Subject}</div>
           <div class="cls">${e.Class}</div>
           <div class="fac">${e.Faculty}</div>
           ${e.Location ? `<div class="loc">📍 ${e.Location}</div>` : ""}
-          ${e.Type === "Makeup" ? `<div class="badge">MAKEUP</div>` : ""}
-        </div>`).join("");
+          ${isMakeup ? `<div class="badge">MAKEUP</div>` : ""}
+        </div>`;
+      }).filter(Boolean).join("");
     };
 
     const rowsHtml = TIME_SLOTS.map((slot) => {

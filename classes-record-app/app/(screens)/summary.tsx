@@ -6,7 +6,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter, useFocusEffect } from "expo-router";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { printOrShareHtml } from "@/utils/printHtml";
 
@@ -34,6 +34,8 @@ interface FlatRow extends SummaryRecord { dept: string; }
 
 export default function SummaryScreen() {
   const colors = useColors();
+  const params = useLocalSearchParams();
+  const scheduleId = params.scheduleId ? parseInt(String(params.scheduleId)) : undefined;
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -50,7 +52,8 @@ export default function SummaryScreen() {
     }, [])
   );
 
-  const [startDate, setStartDate] = useState(SEM_START);
+  const scheduleStartDate = params.startDate ? String(params.startDate).slice(0,10) : SEM_START;
+  const [startDate, setStartDate] = useState(scheduleStartDate);
   const [endDate, setEndDate] = useState(todayStr);
   const [deptFilter, setDeptFilter] = useState("ALL");
   const [facFilter, setFacFilter] = useState("");
@@ -58,10 +61,10 @@ export default function SummaryScreen() {
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["summary", startDate, endDate],
-    queryFn: () => fetchSummary(startDate, endDate),
+    queryFn: () => fetchSummary(startDate, endDate, scheduleId),
   });
 
-  const { data: options } = useQuery<ScheduleOptions>({ queryKey: ["options", 4], queryFn: () => fetchOptions(4) });
+  const { data: options } = useQuery<ScheduleOptions>({ queryKey: ["options", scheduleId], queryFn: () => fetchOptions(scheduleId) });
 
   const facultyList = useMemo(() => {
     if (data) {
@@ -331,7 +334,7 @@ export default function SummaryScreen() {
             {[
               { label: "Today", fn: () => { const t = todayStr(); setStartDate(t); setEndDate(t); } },
               { label: "Last Week", fn: () => { const e = new Date(); const s2 = new Date(); s2.setDate(s2.getDate() - 7); setStartDate(`${s2.getFullYear()}-${String(s2.getMonth() + 1).padStart(2, "0")}-${String(s2.getDate()).padStart(2, "0")}`); setEndDate(todayStr()); } },
-              { label: "Since Sem Start", fn: () => { setStartDate(SEM_START); setEndDate(todayStr()); } },
+              { label: "Since Sem Start", fn: () => { setStartDate(scheduleStartDate); setEndDate(todayStr()); } },
             ].map(({ label, fn }) => (
               <TouchableOpacity key={label} style={s.quickBtn} onPress={() => { fn(); setTimeout(() => refetch(), 100); }}>
                 <Text style={s.quickBtnTxt}>{label}</Text>
