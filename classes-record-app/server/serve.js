@@ -908,9 +908,9 @@ async function handleApi(method, pathname, req, res) {
     const { date, name } = body;
     if (!date || !name) return json(res, 400, { success: false, message: "date and name required" });
     try {
-      const r = const sid2 = body.scheduleId && !isNaN(parseInt(body.scheduleId)) ? parseInt(body.scheduleId) : null;
-      await db.query("INSERT INTO public.holidays (id, date, name, schedule_id) VALUES (nextval('public.holidays_id_seq'), $1, trim($2), $3) RETURNING id, date::text as date, name", [date, name, sid2]);
-      return json(res, 200, { success: true, holiday: r.rows[0] });
+      const sid2 = body.scheduleId && !isNaN(parseInt(body.scheduleId)) ? parseInt(body.scheduleId) : null;
+      const r2 = await db.query("INSERT INTO public.holidays (id, date, name, schedule_id) VALUES (nextval('public.holidays_id_seq'), $1, trim($2), $3) RETURNING id, date::text as date, name", [date, name, sid2]);
+      return json(res, 200, { success: true, holiday: r2.rows[0] });
     } catch (e) { return json(res, 500, { error: e.message }); }
   }
 
