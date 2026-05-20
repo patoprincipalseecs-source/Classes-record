@@ -127,16 +127,17 @@ export async function fetchSummary(start?: string, end?: string, scheduleId?: nu
   return res.json();
 }
 
-export async function fetchHolidays() {
-  const res = await fetch(`${API_BASE}/holidays`);
+export async function fetchHolidays(scheduleId?: number) {
+  const url = scheduleId != null ? `${API_BASE}/holidays?scheduleId=${scheduleId}` : `${API_BASE}/holidays`;
+  const res = await fetch(url);
   return res.json();
 }
 
-export async function addHoliday(date: string, name: string) {
+export async function addHoliday(date: string, name: string, scheduleId?: number) {
   const res = await fetch(`${API_BASE}/holidays`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ date, name }),
+    body: JSON.stringify({ date, name, scheduleId }),
   });
   return res.json();
 }

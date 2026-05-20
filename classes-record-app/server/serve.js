@@ -890,8 +890,12 @@ async function handleApi(method, pathname, req, res) {
   // ========== HOLIDAYS ROUTES ==========
 
   if (method === "GET" && pathname === "/api/holidays") {
+    const scheduleId = reqUrl.searchParams.get("scheduleId");
+    const sidInt = scheduleId && !isNaN(parseInt(scheduleId)) ? parseInt(scheduleId) : null;
     try {
-      const r = await db.query("SELECT id, date::text as date, trim(both '\r\n' from name) as name FROM public.holidays ORDER BY date");
+      const r = sidInt
+        ? await db.query("SELECT id, date::text as date, trim(both '\r\n' from name) as name FROM public.holidays WHERE schedule_id = $1 ORDER BY date", [sidInt])
+        : await db.query("SELECT id, date::text as date, trim(both '\r\n' from name) as name FROM public.holidays ORDER BY date");
       return json(res, 200, r.rows);
     } catch (e) { return json(res, 500, { error: e.message }); }
   }
@@ -900,7 +904,8 @@ async function handleApi(method, pathname, req, res) {
     const { date, name } = body;
     if (!date || !name) return json(res, 400, { success: false, message: "date and name required" });
     try {
-      const r = await db.query("INSERT INTO public.holidays (id, date, name) VALUES (nextval('public.holidays_id_seq'), $1, trim($2)) RETURNING id, date::text as date, name", [date, name]);
+      const r = const sid2 = body.scheduleId && !isNaN(parseInt(body.scheduleId)) ? parseInt(body.scheduleId) : null;
+      await db.query("INSERT INTO public.holidays (id, date, name, schedule_id) VALUES (nextval('public.holidays_id_seq'), $1, trim($2), $3) RETURNING id, date::text as date, name", [date, name, sid2]);
       return json(res, 200, { success: true, holiday: r.rows[0] });
     } catch (e) { return json(res, 500, { error: e.message }); }
   }

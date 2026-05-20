@@ -6,7 +6,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter, useFocusEffect } from "expo-router";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 
 import { useColors } from "@/hooks/useColors";
@@ -34,10 +34,12 @@ export default function HolidaysScreen() {
   const [newDate, setNewDate] = useState("");
   const [newName, setNewName] = useState("");
 
-  const { data: holidays = [], isLoading } = useQuery({ queryKey: ["holidays"], queryFn: fetchHolidays });
+  const params = useLocalSearchParams();
+  const scheduleId = params.scheduleId ? parseInt(String(params.scheduleId)) : undefined;
+  const { data: holidays = [], isLoading } = useQuery({ queryKey: ["holidays", scheduleId], queryFn: () => fetchHolidays(scheduleId) });
 
   const addMutation = useMutation({
-    mutationFn: () => addHoliday(newDate, newName),
+    mutationFn: () => addHoliday(newDate, newName, scheduleId),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["holidays"] }); setNewDate(""); setNewName(""); },
     onError: () => Alert.alert("Error", "Failed to add holiday"),
   });
