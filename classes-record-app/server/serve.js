@@ -1125,6 +1125,29 @@ async function handleApi(method, pathname, req, res) {
     } catch(e) { return json(res, 500, { error: String(e) }); }
   }
 
+  // POST /api/import/students/csv
+  if (method === "POST" && pathname === "/api/import/students/csv") {
+    const { rows, scheduleId, className } = body;
+    if (!rows || !scheduleId || !className) return json(res, 400, { error: "rows, scheduleId and className required" });
+    try {
+      let inserted = 0, skipped = 0;
+      for (const row of rows) {
+        const rollNo = (row["Roll No"] || row["roll_no"] || row["RollNo"] || row["Reg No"] || row["RegNo"] || "").trim();
+        const name = (row["Name"] || row["name"] || row["Student Name"] || "").trim();
+        const email = (row["Email"] || row["email"] || "").trim();
+        if (!rollNo || !name) { skipped++; continue; }
+        try {
+          await db.query(
+            "INSERT INTO public.students (schedule_id, class_name, roll_no, name, email) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (schedule_id, class_name, roll_no) DO NOTHING",
+            [parseInt(scheduleId), className, rollNo, name, email]
+          );
+          inserted++;
+        } catch { skipped++; }
+      }
+      return json(res, 200, { success: true, inserted, skipped });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   if (method === "GET" && pathname === "/api/import/sample/students") {
     const csv = "Class,Roll No,Name,Email\n2K25-BSCS-15A,001,Ahmed Ali,ahmed@example.com\n";
     res.writeHead(200, { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": "attachment; filename=SampleStudents.csv", "Access-Control-Allow-Origin": "*", "Cache-Control": "no-cache" });
