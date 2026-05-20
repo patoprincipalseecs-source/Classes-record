@@ -211,7 +211,8 @@ async function handleApi(method, pathname, req, res) {
     if (!username || !password) return json(res, 400, { success: false, message: "Username and password required" });
     try {
       const r = await db.query(
-        `SELECT fa.id, fa.schedule_id, fa.faculty_name, fa.username, fa.password, s.name as schedule_name
+        `SELECT fa.id, fa.schedule_id, fa.faculty_name, fa.username, fa.password,
+                s.name as schedule_name, s.start_date, s.end_date
          FROM public.faculty_accounts fa
          JOIN public.schedules s ON s.id = fa.schedule_id
          WHERE fa.username=$1`,
@@ -222,7 +223,10 @@ async function handleApi(method, pathname, req, res) {
       if (account.password !== password.trim()) return json(res, 200, { success: false, message: "Incorrect password" });
       const sessions = r.rows.map(a => ({
         id: a.id, scheduleId: a.schedule_id, scheduleName: a.schedule_name,
-        facultyName: a.faculty_name, username: a.username
+        scheduleTitle: a.schedule_name,
+        facultyName: a.faculty_name, username: a.username,
+        startDate: a.start_date ? new Date(a.start_date).toISOString() : null,
+        endDate: a.end_date ? new Date(a.end_date).toISOString() : null
       }));
       return json(res, 200, { success: true, sessions });
     } catch(e) { return json(res, 500, { success: false, message: String(e) }); }
