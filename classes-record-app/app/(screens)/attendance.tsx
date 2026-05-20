@@ -54,8 +54,11 @@ function generateSemesterDates(
   startIso: string,
   endIso: string,
 ): SemDate[] {
-  const start = new Date(startIso + "T00:00:00");
-  const end   = new Date(endIso   + "T00:00:00");
+  // Parse as local date to avoid UTC offset shifting the date
+  const [sy, sm, sd2] = startIso.slice(0,10).split("-").map(Number);
+  const [ey, em, ed2] = endIso.slice(0,10).split("-").map(Number);
+  const start = new Date(sy, sm-1, sd2);
+  const end   = new Date(ey, em-1, ed2);
   const results: SemDate[] = [];
 
   const regular = rows
@@ -81,8 +84,12 @@ function generateSemesterDates(
     const diff = (target - d.getDay() + 7) % 7;
     d.setDate(d.getDate() + diff);
     while (d <= end) {
+      // Use local date formatting to avoid UTC shift
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      const dd = String(d.getDate()).padStart(2,"0");
       results.push({
-        date: d.toISOString().slice(0, 10),
+        date: `${yyyy}-${mm}-${dd}`,
         type: "regular",
         dayName: row.Day,
         time: row.Time,
@@ -97,7 +104,8 @@ function generateSemesterDates(
   for (const r of makeups) {
     const dateStr = r.EntryDate as string;
     if (dateStr >= startIso && dateStr <= endIso) {
-      const wd = new Date(dateStr + "T00:00:00").getDay();
+      const [my, mm2, md2] = dateStr.slice(0,10).split("-").map(Number);
+    const wd = new Date(my, mm2-1, md2).getDay();
       results.push({ date: dateStr, type: "makeup", dayName: DAY_NAMES[wd], time: r.Time });
     }
   }
@@ -285,7 +293,7 @@ export default function AttendanceScreen() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["roster", scheduleId, selectedClass] });
       const slotKey = expandedDate ?? manualDate;
-      Alert.alert("Saved", `Attendance saved for ${fmtDateLabel(parseSlot(slotKey).date)}.`);
+      if (typeof window !== "undefined") window.alert(`✅ Attendance saved for ${fmtDateLabel(parseSlot(slotKey).date)}.`); else Alert.alert("Saved", `Attendance saved for ${fmtDateLabel(parseSlot(slotKey).date)}.`);
     },
     onError: () => setErrorMsg("Could not save attendance"),
   });

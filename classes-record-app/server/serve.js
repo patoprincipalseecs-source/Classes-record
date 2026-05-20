@@ -1052,16 +1052,30 @@ async function handleApi(method, pathname, req, res) {
     const { scheduleId, className, date, sessionTime, records } = body;
     if (!scheduleId || !className || !date || !records) return json(res, 400, { error: "Missing required fields" });
     try {
+      let saved = 0, failed = 0;
       for (const rec of records) {
-        await db.query(
-          `INSERT INTO public.attendance (schedule_id, class_name, student_id, date, session_time, status)
-           VALUES ($1,$2,$3,$4,$5,$6)
-           ON CONFLICT (schedule_id, class_name, student_id, date, session_time)
-           DO UPDATE SET status=$6`,
-          [scheduleId, className, rec.studentId, date, sessionTime || "", rec.status]
-        );
+        try {
+          let studentId = rec.studentId;
+          // If no studentId, look up by rollNo
+          if (!studentId && rec.rollNo) {
+            const sr = await db.query(
+              "SELECT id FROM public.students WHERE schedule_id=$1 AND class_name=$2 AND roll_no=$3 LIMIT 1",
+              [scheduleId, className, rec.rollNo]
+            );
+            if (sr.rows.length) studentId = sr.rows[0].id;
+          }
+          if (!studentId) { failed++; continue; }
+          await db.query(
+            `INSERT INTO public.attendance (schedule_id, class_name, student_id, date, session_time, status)
+             VALUES ($1,$2,$3,$4,$5,$6)
+             ON CONFLICT (schedule_id, class_name, student_id, date, session_time)
+             DO UPDATE SET status=$6`,
+            [scheduleId, className, studentId, date, sessionTime || "", rec.status]
+          );
+          saved++;
+        } catch { failed++; }
       }
-      return json(res, 200, { success: true });
+      return json(res, 200, { success: true, saved, failed });
     } catch(e) { return json(res, 500, { error: String(e) }); }
   }
 
@@ -1136,10 +1150,11 @@ async function handleApi(method, pathname, req, res) {
         const name = (row["Name"] || row["name"] || row["Student Name"] || "").trim();
         const email = (row["Email"] || row["email"] || "").trim();
         if (!rollNo || !name) { skipped++; continue; }
+        // Always use the className passed from frontend (selected class), ignore Class column in CSV
         try {
           await db.query(
             "INSERT INTO public.students (schedule_id, class_name, roll_no, name, email) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (schedule_id, class_name, roll_no) DO NOTHING",
-            [parseInt(scheduleId), className, rollNo, name, email]
+            [parseInt(scheduleId), className.trim(), rollNo, name, email]
           );
           inserted++;
         } catch { skipped++; }
