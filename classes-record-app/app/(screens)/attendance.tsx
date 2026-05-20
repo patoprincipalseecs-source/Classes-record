@@ -201,7 +201,10 @@ export default function AttendanceScreen() {
 
   const semesterDates = useMemo(() => {
     if (!selectedClass || !selectedSubject || !hasDates) return [];
-    return generateSemesterDates(scheduleRows, selectedClass, selectedSubject, startDate!, endDate!);
+    // Strip time component if present (e.g. 2026-05-18T00:00:00.000Z -> 2026-05-18)
+    const startStr = startDate!.slice(0, 10);
+    const endStr = endDate!.slice(0, 10);
+    return generateSemesterDates(scheduleRows, selectedClass, selectedSubject, startStr, endStr);
   }, [scheduleRows, selectedClass, selectedSubject, startDate, endDate, hasDates]);
 
   const { data: students = [], isLoading: studentsLoading } = useQuery({
@@ -301,13 +304,13 @@ export default function AttendanceScreen() {
   async function handleBulkUpload() {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "*/*"],
+        type: ["text/csv", "text/comma-separated-values", "text/plain", "*/*"],
         copyToCacheDirectory: true,
       });
       if (result.canceled || !result.assets?.length) return;
       const asset = result.assets[0];
       setBulkLoading(true);
-      const res = await importStudentsExcel(scheduleId, selectedClass, asset.uri, asset.name, asset.mimeType ?? "application/octet-stream");
+      const res = await importStudentsExcel(scheduleId, selectedClass, asset.uri, asset.name ?? "students.csv", asset.mimeType ?? "text/csv", (asset as any).file);
       setBulkLoading(false);
       if (res.success) {
         Alert.alert("Import Complete", `${res.inserted ?? 0} students added, ${res.skipped ?? 0} skipped.`);

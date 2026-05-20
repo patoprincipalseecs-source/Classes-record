@@ -565,7 +565,27 @@ export async function deleteFacultyAccount(id: number) {
   return res.json();
 }
 
-export async function importStudentsExcel(scheduleId: number, className: string, uri: string, name: string, mimeType: string) {
+export async function importStudentsExcel(scheduleId: number, className: string, uri: string, name: string, mimeType: string, file?: File) {
+  const isCSV = name?.toLowerCase().endsWith(".csv") || mimeType === "text/csv" || mimeType === "text/plain";
+  if (isCSV && file) {
+    try {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
+      const rows = lines.slice(1).map(line => {
+        const vals = line.split(",").map(v => v.trim().replace(/^"|"$/g, ""));
+        const obj: Record<string,string> = {};
+        headers.forEach((h, i) => { obj[h] = vals[i] || ""; });
+        return obj;
+      }).filter(r => Object.values(r).some(v => v));
+      const res = await fetch(`${API_BASE}/import/students/csv`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rows, scheduleId, className })
+      });
+      return res.json();
+    } catch(e: any) { return { success: false, error: e.message }; }
+  }
   const formData = await buildFormData(uri, name, mimeType);
   const res = await fetch(`${API_BASE}/import/students/xlsx?scheduleId=${scheduleId}&className=${encodeURIComponent(className)}`, { method: "POST", body: formData });
   return res.json();
