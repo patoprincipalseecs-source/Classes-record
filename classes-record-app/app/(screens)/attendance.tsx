@@ -291,11 +291,15 @@ export default function AttendanceScreen() {
       return markAttendance(scheduleId, selectedClass, date, sessionTime, records);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["roster", scheduleId, selectedClass] });
       const slotKey = expandedDate ?? manualDate;
+      // Refetch roster to update marked status
+      qc.invalidateQueries({ queryKey: ["roster", scheduleId, selectedClass] });
+      qc.refetchQueries({ queryKey: ["roster", scheduleId, selectedClass] });
+      // Close expanded panel so user can see updated status
+      setExpandedDate(null);
       if (typeof window !== "undefined") window.alert(`✅ Attendance saved for ${fmtDateLabel(parseSlot(slotKey).date)}.`); else Alert.alert("Saved", `Attendance saved for ${fmtDateLabel(parseSlot(slotKey).date)}.`);
     },
-    onError: () => setErrorMsg("Could not save attendance"),
+    onError: (e: any) => setErrorMsg("Could not save attendance: " + (e?.message || "")),
   });
 
   const deleteMutation = useMutation({

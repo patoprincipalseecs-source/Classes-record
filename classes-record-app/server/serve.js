@@ -1100,14 +1100,26 @@ async function handleApi(method, pathname, req, res) {
          WHERE schedule_id=$1 AND class_name=$2 ORDER BY roll_no`,
         [parseInt(scheduleId), className]
       );
-      const dates = [...new Set(r.rows.map(row => row.date?.toISOString?.()?.slice(0,10) || String(row.date).slice(0,10)))].sort();
+      // Build slot keys as "date|sessionTime" to match frontend markedDates
+      const slotKeys = [...new Set(r.rows.map(row => {
+        const d = row.date?.toISOString?.()?.slice(0,10) || String(row.date).slice(0,10);
+        const t = row.session_time || "";
+        return t ? `${d}|${t}` : d;
+      }))].sort();
+      const dates = slotKeys;
+      // Also build records map per student
+      const studentMap = {};
+      for (const row of r.rows) {
+        const d = row.date?.toISOString?.()?.slice(0,10) || String(row.date).slice(0,10);
+        const slotKey = row.session_time ? `${d}|${row.session_time}` : d;
+        const rn = row.roll_no || String(row.student_id);
+        if (!studentMap[rn]) studentMap[rn] = { rollNo: rn, name: row.name, records: {} };
+        studentMap[rn].records[slotKey] = row.status;
+      }
       return json(res, 200, {
         dates,
         students: stu.rows.map(s => ({ id: s.id, rollNo: s.roll_no, name: s.name, email: s.email })),
-        rows: r.rows.map(row => ({
-          studentId: row.student_id, date: row.date?.toISOString?.()?.slice(0,10) || String(row.date).slice(0,10),
-          sessionTime: row.session_time, status: row.status, rollNo: row.roll_no, name: row.name
-        }))
+        rows: Object.values(studentMap)
       });
     } catch(e) { return json(res, 500, { error: String(e) }); }
   }
