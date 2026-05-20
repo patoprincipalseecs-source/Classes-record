@@ -22,7 +22,7 @@
     },
     "web": {
       "favicon": "./assets/images/icon.png",
-      "baseUrl": "/classes-record"
+      "baseUrl": "/"
     },
     "plugins": [
       "expo-router",
@@ -32,7 +32,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true,
-      "baseUrl": "/classes-record"
+      "baseUrl": "/"
     },
     "extra": {
       "eas": {

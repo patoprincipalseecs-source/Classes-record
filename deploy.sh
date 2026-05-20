@@ -8,6 +8,7 @@ pnpm exec expo export --platform web --clear
 
 # SPA routing fix for GitHub Pages
 touch dist/.nojekyll
+echo "schoolcollege.online" > dist/CNAME
 cat > dist/404.html << 'HTML'
 <!DOCTYPE html>
 <html>
