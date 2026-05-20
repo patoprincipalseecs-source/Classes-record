@@ -1181,9 +1181,12 @@ async function handleApi(method, pathname, req, res) {
 
   // POST /api/meeting
   if (method === "POST" && pathname === "/api/meeting") {
-    const { date, start, end, faculty } = body;
+    const { date, start, end, faculty, scheduleId } = body;
     try {
-      const q = await db.query("SELECT * FROM public.weekly_schedule WHERE schedule_id IS NULL");
+      const sidInt = scheduleId && !isNaN(parseInt(scheduleId)) ? parseInt(scheduleId) : null;
+      const q = sidInt
+        ? await db.query("SELECT * FROM public.weekly_schedule WHERE schedule_id = $1", [sidInt])
+        : await db.query("SELECT * FROM public.weekly_schedule WHERE schedule_id IS NULL");
       const rows = q.rows;
       function timeToMin(t) {
         if (!t) return 0;
