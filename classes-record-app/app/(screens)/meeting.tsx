@@ -40,7 +40,8 @@ export default function MeetingScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { startHour: shP, endHour: ehP, activeDays: adP } = useLocalSearchParams<{ startHour?: string; endHour?: string; activeDays?: string }>();
+  const { startHour: shP, endHour: ehP, activeDays: adP, scheduleId: scheduleIdParam } = useLocalSearchParams<{ startHour?: string; endHour?: string; activeDays?: string; scheduleId?: string }>();
+  const scheduleId = scheduleIdParam ? parseInt(String(scheduleIdParam)) : undefined;
   const meetStartHour = shP ? Number(shP) : 9;
   const meetEndHour   = ehP ? Number(ehP) : 17;
   const HOUR_LABELS = buildHourLabels(meetStartHour, meetEndHour);
@@ -67,11 +68,12 @@ export default function MeetingScreen() {
   const [result, setResult] = useState<MeetingResult | null>(null);
   const [activeTab, setActiveTab] = useState<"free" | "busy">("free");
 
-  const { data: schedule = [] } = useQuery({ queryKey: ["schedule"], queryFn: fetchSchedule });
-  const { data: options } = useQuery<ScheduleOptions>({ queryKey: ["options"], queryFn: fetchOptions });
+  const { data: schedule = [] } = useQuery({ queryKey: ["schedule", scheduleId], queryFn: () => fetchSchedule(scheduleId) });
+  const { data: options } = useQuery<ScheduleOptions>({ queryKey: ["options", scheduleId], queryFn: () => fetchOptions(scheduleId) });
 
   const facultyList = useMemo(() => {
-    const fromDB = [...new Set(schedule.filter((r) => !r.Type).map((r) => r.Faculty))].sort();
+    const fromDB = [...new Set(schedule.filter((r) => !r.Type).map((r) => r.Faculty))].filter(Boolean).sort();
+    if (fromDB.length > 0) return fromDB;
     const fromOpts = options?.faculty ?? [];
     return [...new Set([...fromDB, ...fromOpts])].sort();
   }, [schedule, options]);
