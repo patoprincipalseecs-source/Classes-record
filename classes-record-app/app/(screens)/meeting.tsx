@@ -84,7 +84,7 @@ export default function MeetingScreen() {
   );
 
   const mutation = useMutation({
-    mutationFn: () => fetchMeeting(date, start, end, selectedFaculty.length > 0 ? selectedFaculty : undefined),
+    mutationFn: () => fetchMeeting(date, start, end, selectedFaculty.length > 0 ? selectedFaculty : undefined, scheduleId),
     onSuccess: (data) => setResult(data),
     onError: () => Alert.alert("Error", "Could not generate report"),
   });

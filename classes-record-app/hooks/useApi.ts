@@ -568,3 +568,22 @@ export async function importStudentsExcel(scheduleId: number, className: string,
   return res.json();
 }
 
+
+export interface MeetingResult {
+  date: string;
+  dayName: string;
+  start: string;
+  end: string;
+  free: { name: string; dept: string }[];
+  busy: { name: string; dept: string; records: { subject: string; cls: string; loc: string; start: number; end: number; type: string }[] }[];
+  summary: Record<string, { free: number; busy: number }>;
+}
+
+export async function fetchMeeting(date: string, start: string, end: string, faculty?: string[], scheduleId?: number): Promise<MeetingResult> {
+  const res = await fetch(`${API_BASE}/meeting`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ date, start, end, faculty, scheduleId })
+  });
+  return res.json();
+}
