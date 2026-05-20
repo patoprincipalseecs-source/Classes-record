@@ -26,6 +26,18 @@ export default function FacultyPortalScreen() {
 
   const [session, setSession] = useState<FacultySession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [schedDates, setSchedDates] = useState<{startDate:string,endDate:string}|null>(null);
+
+  // Fetch schedule dates from server when session lacks them (hooks must be at top level)
+  useEffect(() => {
+    if (session && !session.startDate && session.scheduleId) {
+      const domain = process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com";
+      fetch(`https://${domain}/api/schedule-dates?scheduleId=${session.scheduleId}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d?.startDate) setSchedDates({ startDate: d.startDate, endDate: d.endDate || "" }); })
+        .catch(() => {});
+    }
+  }, [session?.scheduleId, session?.startDate]);
 
   // Login form
   const [username, setUsername] = useState("");
@@ -46,9 +58,33 @@ export default function FacultyPortalScreen() {
   const [changingPass, setChangingPass] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(SESSION_KEY).then(raw => {
+    AsyncStorage.getItem(SESSION_KEY).then(async raw => {
       if (raw) {
-        try { setSession(JSON.parse(raw)); } catch { /* ignore */ }
+        try {
+          const saved = JSON.parse(raw);
+          setSession(saved);
+          // Refresh session from server to get latest startDate/endDate
+          if (saved.username && saved.password) {
+            // Can't refresh without password - just use saved session
+          } else if (saved.username) {
+            // Try to get fresh schedule dates via schedule lookup
+            try {
+              const API = process.env.EXPO_PUBLIC_DOMAIN
+                ? "https://" + process.env.EXPO_PUBLIC_DOMAIN + "/api"
+                : "https://classes-record.onrender.com/api";
+              const r = await fetch(`${API}/schedules?username=patoprincipalseecs@gmail.com`);
+              if (r.ok) {
+                const schedules = await r.json();
+                const sched = Array.isArray(schedules) ? schedules.find((s: any) => s.id === saved.scheduleId) : null;
+                if (sched && (sched.startDate || sched.endDate)) {
+                  const updated = { ...saved, startDate: sched.startDate, endDate: sched.endDate, scheduleTitle: sched.name || saved.scheduleTitle };
+                  await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(updated));
+                  setSession(updated);
+                }
+              }
+            } catch { /* ignore refresh error */ }
+          }
+        } catch { /* ignore */ }
       }
       setLoading(false);
     });
@@ -90,27 +126,25 @@ export default function FacultyPortalScreen() {
   }
 
   async function handleSignOut() {
-    Alert.alert("Sign Out", "Sign out of faculty portal?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out", style: "destructive", onPress: async () => {
-          await AsyncStorage.removeItem(SESSION_KEY);
-          setSession(null);
-        },
-      },
-    ]);
+    const confirmed = typeof window !== "undefined"
+      ? window.confirm("Sign out of faculty portal?")
+      : true;
+    if (confirmed) {
+      await AsyncStorage.removeItem(SESSION_KEY);
+      setSession(null);
+    }
   }
 
   async function handleChangePassword() {
-    if (!newPass.trim() || !curPass.trim()) { Alert.alert("Error", "Fill in all fields"); return; }
-    if (newPass.length < 6) { Alert.alert("Error", "New password must be at least 6 characters"); return; }
-    if (newPass !== confirmPass) { Alert.alert("Error", "New passwords do not match"); return; }
+    if (!newPass.trim() || !curPass.trim()) { if (typeof window !== "undefined") window.alert("⚠️ Fill in all fields."); else Alert.alert("Error", "Fill in all fields"); return; }
+    if (newPass.length < 6) { if (typeof window !== "undefined") window.alert("⚠️ New password must be at least 6 characters"); else Alert.alert("Error", "Too short"); return; }
+    if (newPass !== confirmPass) { if (typeof window !== "undefined") window.alert("⚠️ New passwords do not match"); else Alert.alert("Error", "Mismatch"); return; }
     if (!session) return;
     setChangingPass(true);
-    const r = await changeFacultyPassword(session.accountId, curPass, newPass);
+    const r = await changeFacultyPassword(session.username, curPass, newPass);
     setChangingPass(false);
     if (r.success) {
-      Alert.alert("Success", "Password changed. Use your new password next time you log in.");
+      if (typeof window !== "undefined") window.alert("✅ Password changed successfully!"); else Alert.alert("Success", "Password changed");
       setShowChangePass(false);
       setCurPass(""); setNewPass(""); setConfirmPass("");
     } else {
@@ -214,7 +248,9 @@ export default function FacultyPortalScreen() {
 
   // ── Logged in: faculty dashboard ──
   if (session) {
-    const q = `scheduleId=${session.scheduleId}&scheduleTitle=${encodeURIComponent(session.scheduleTitle)}${session.startDate ? `&startDate=${session.startDate}&endDate=${session.endDate ?? ""}` : ""}&facultyName=${encodeURIComponent(session.facultyName)}`;
+    const sd = session.startDate || schedDates?.startDate || "";
+    const ed = session.endDate || schedDates?.endDate || "";
+    const q = `scheduleId=${session.scheduleId}&scheduleTitle=${encodeURIComponent(session.scheduleTitle || session.scheduleName || "")}${sd ? `&startDate=${sd}&endDate=${ed}` : ""}&facultyName=${encodeURIComponent(session.facultyName)}`;
 
     return (
       <View style={s.container}>
