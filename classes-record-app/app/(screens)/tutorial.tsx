@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useCallback } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform,

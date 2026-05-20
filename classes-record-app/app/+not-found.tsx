@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 export default function NotFoundScreen() {
   return <Redirect href="/" />;

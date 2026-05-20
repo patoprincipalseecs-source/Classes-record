@@ -55,15 +55,17 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
     "@react-native-community/datetimepicker": "^9.1.0",
     "better-sqlite3": "^12.9.0",
     "expo-document-picker": "^55.0.13",
     "expo-file-system": "^55.0.17",
+    "expo-font": "~14.0.11",
     "expo-print": "^55.0.13",
     "expo-screen-orientation": "^9.0.9",
     "expo-sharing": "^55.0.18",
+    "nodemailer": "^6.9.13",
     "pg": "^8.20.0",
-    "xlsx": "^0.18.5",
-    "nodemailer": "^6.9.13"
+    "xlsx": "^0.18.5"
   }
 }
