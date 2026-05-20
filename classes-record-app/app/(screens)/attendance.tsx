@@ -132,6 +132,25 @@ export default function AttendanceScreen() {
   const facultyMode = !!facultyName;
   const teacherMode = !publicMode && !!user;
   const hasDates = !!(startDate && endDate);
+  const [fetchedStart, setFetchedStart] = React.useState<string>("");
+  const [fetchedEnd, setFetchedEnd] = React.useState<string>("");
+
+  // Fetch schedule dates from server when not in params
+  React.useEffect(() => {
+    if (!startDate && scheduleId) {
+      const domain = process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com";
+      fetch(`https://${domain}/api/schedule-dates?scheduleId=${scheduleId}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (d?.startDate) setFetchedStart(String(d.startDate).slice(0,10));
+          if (d?.endDate) setFetchedEnd(String(d.endDate).slice(0,10));
+        })
+        .catch(() => {});
+    }
+  }, [scheduleId, startDate]);
+
+  const effectiveStartDate = startDate ? startDate.slice(0,10) : (fetchedStart || "2026-01-01");
+  const effectiveEndDate = endDate ? endDate.slice(0,10) : (fetchedEnd || "2027-12-31");
 
   useFocusEffect(
     useCallback(() => {
@@ -200,12 +219,12 @@ export default function AttendanceScreen() {
   }, [classSubjectList]);
 
   const semesterDates = useMemo(() => {
-    if (!selectedClass || !selectedSubject || !hasDates) return [];
+    if (!selectedClass || !selectedSubject) return [];
     // Strip time component if present (e.g. 2026-05-18T00:00:00.000Z -> 2026-05-18)
-    const startStr = startDate!.slice(0, 10);
-    const endStr = endDate!.slice(0, 10);
+    const startStr = effectiveStartDate.slice(0, 10);
+    const endStr = effectiveEndDate.slice(0, 10);
     return generateSemesterDates(scheduleRows, selectedClass, selectedSubject, startStr, endStr);
-  }, [scheduleRows, selectedClass, selectedSubject, startDate, endDate, hasDates]);
+  }, [scheduleRows, selectedClass, selectedSubject, effectiveStartDate, effectiveEndDate]);
 
   const { data: students = [], isLoading: studentsLoading } = useQuery({
     queryKey: ["students", scheduleId, selectedClass],
@@ -565,7 +584,7 @@ export default function AttendanceScreen() {
       return <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} size="large" />;
     }
 
-    if (!hasDates) {
+    if (!hasDates && semesterDates.length === 0) {
       return (
         <ScrollView>
           <View style={s.manualRow}>

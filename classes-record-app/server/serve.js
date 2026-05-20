@@ -1290,6 +1290,25 @@ async function handleApi(method, pathname, req, res) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  // GET /api/schedule-dates — get start/end dates for a schedule
+  if (method === "GET" && pathname === "/api/schedule-dates") {
+    const scheduleId = reqUrl.searchParams.get("scheduleId");
+    if (!scheduleId) return json(res, 400, { error: "scheduleId required" });
+    try {
+      const r = await db.query(
+        "SELECT start_date, end_date, name FROM public.schedules WHERE id=$1",
+        [parseInt(scheduleId)]
+      );
+      if (!r.rows.length) return json(res, 404, { error: "Not found" });
+      const row = r.rows[0];
+      return json(res, 200, {
+        startDate: row.start_date ? new Date(row.start_date).toISOString().slice(0,10) : null,
+        endDate: row.end_date ? new Date(row.end_date).toISOString().slice(0,10) : null,
+        name: row.name
+      });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   // POST /api/fix-sortkeys — fix bad sort_key values
   if (method === "POST" && pathname === "/api/fix-sortkeys") {
     const { scheduleId } = body;
