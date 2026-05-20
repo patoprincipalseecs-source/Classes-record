@@ -1,21 +1,33 @@
 #!/bin/bash
 set -e
-echo "🔨 Building..."
 cd /workspaces/Classes-record/classes-record-app
+
+# Build
+rm -rf .expo dist node_modules/.cache
 pnpm exec expo export --platform web --clear
 
-echo "🔧 Adding .nojekyll..."
+# SPA routing fix for GitHub Pages
 touch dist/.nojekyll
+cat > dist/404.html << 'HTML'
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Classes Record</title>
+  <script>
+    var l = window.location;
+    var base = '/classes-record';
+    var path = l.pathname.replace(base, '') + l.search + l.hash;
+    l.replace(l.protocol + '//' + l.host + base + '/#' + path);
+  </script>
+</head>
+<body>Redirecting...</body>
+</html>
+HTML
 
-echo "✅ Paths:" && grep -E "src=|href=" dist/index.html
-
-echo "🚀 Deploying to gh-pages..."
-cd dist && rm -rf .git && git init && git add -A
-git commit -m "Deploy: $(date +%Y%m%d-%H%M)"
-git remote add origin https://github.com/patoprincipalseecs-source/classes-record.git
+# Deploy to gh-pages
+cd dist && rm -rf .git && git init && git add -A && \
+git commit -m "Deploy: $(date)" && \
+git remote add origin https://github.com/patoprincipalseecs-source/classes-record.git && \
 git push --force origin HEAD:gh-pages
-echo "🎉 LIVE: https://patoprincipalseecs-source.github.io/classes-record"
-cd /workspaces/Classes-record
-
-# Also commit source changes to main
-# cd /workspaces/Classes-record && git add -A && git commit -m "Source: $(date +%Y%m%d-%H%M)" && git push origin main
+echo "🚀 DEPLOYED!"

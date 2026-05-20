@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+  <head><script>
+  (function() {
+    var redirect = window.location.hash;
+    if (redirect && redirect.startsWith('#/')) {
+      var path = redirect.slice(1);
+      window.history.replaceState(null, null, '/classes-record' + path);
+    }
+  })();
+</script>
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
