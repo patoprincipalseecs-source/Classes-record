@@ -562,7 +562,7 @@ async function handleApi(method, pathname, req, res) {
       const userRow = await db.query("SELECT username FROM public.users WHERE id=$1", [id]);
       if (userRow.rows.length && userRow.rows[0].username !== ADMIN_USERNAME) {
         const username = userRow.rows[0].username;
-        const userScheds = await db.query("SELECT id FROM public.schedules WHERE user_id=$1 OR username=$2", [id, username]);
+        const userScheds = await db.query("SELECT id FROM public.schedules WHERE user_id=$1", [username]);
         for (const sched of userScheds.rows) {
           const sid = sched.id;
           await db.query("DELETE FROM public.attendance WHERE schedule_id=$1", [sid]);
