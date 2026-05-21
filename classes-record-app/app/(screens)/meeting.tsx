@@ -205,11 +205,11 @@ ${deptEntries.length > 0 ? `
     facAddTxt: { flex: 1, fontFamily: "Inter_400Regular", fontSize: 14, color: colors.mutedForeground },
     chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
     chip: {
-      flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.secondary,
+      flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.primaryLight || "#EEF4FF",
       borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
       borderWidth: 1, borderColor: colors.primary,
     },
-    chipTxt: { fontFamily: "Inter_500Medium", fontSize: 13, color: colors.primary },
+    chipTxt: { fontFamily: "Inter_600SemiBold", fontSize: 13, color: colors.primary },
     allFacChip: {
       flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.muted,
       borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
