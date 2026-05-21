@@ -323,9 +323,10 @@ export default function MySchedulesScreen() {
     logoutRow: { flexDirection: "row", justifyContent: "flex-end", marginHorizontal: 16, marginTop: 16, marginBottom: 4 },
     logoutBtn: {
       flexDirection: "row", alignItems: "center", gap: 5,
-      backgroundColor: colors.secondary, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
+      backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
+      borderWidth: 1, borderColor: "rgba(255,255,255,0.4)",
     },
-    logoutTxt: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
+    logoutTxt: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#ffffff" },
   });
 
   if (authLoading) {
