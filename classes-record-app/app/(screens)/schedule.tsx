@@ -117,7 +117,8 @@ export default function ScheduleScreen() {
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
   const [clipboard, setClipboard] = React.useState<ScheduleRow | null>(null);
-  const { scheduleId: scheduleIdParam, scheduleTitle, startHour: startHourParam, endHour: endHourParam, activeDays: activeDaysParam } = useLocalSearchParams<{ scheduleId?: string; scheduleTitle?: string; startHour?: string; endHour?: string; activeDays?: string }>();
+  const { scheduleId: scheduleIdParam, scheduleTitle, startHour: startHourParam, endHour: endHourParam, activeDays: activeDaysParam, isPublic: isPublicParam } = useLocalSearchParams<{ scheduleId?: string; scheduleTitle?: string; startHour?: string; endHour?: string; activeDays?: string; isPublic?: string }>();
+  const isPublicView = isPublicParam === "1";
   const scheduleId = scheduleIdParam ? Number(scheduleIdParam) : undefined;
   const [showSettings, setShowSettings] = React.useState(false);
   const [settingsHourStart, setSettingsHourStart] = React.useState<number>(9);
@@ -539,10 +540,10 @@ export default function ScheduleScreen() {
             <Text style={s.homeBtnTxt}>{scheduleId ? "Back" : "Home"}</Text>
           </TouchableOpacity>
           <View style={s.actionBtns}>
-            <TouchableOpacity style={s.actionBtn} onPress={() => setShowImport(true)}>
+            {!isPublicView && <TouchableOpacity style={s.actionBtn} onPress={() => setShowImport(true)}>
               <Feather name="upload" size={15} color="#fff" />
               <Text style={s.actionBtnTxt}>Upload</Text>
-            </TouchableOpacity>
+            </TouchableOpacity>}
             <TouchableOpacity style={s.actionBtn} onPress={handleDownload}>
               <Feather name="download" size={15} color="#fff" />
               <Text style={s.actionBtnTxt}>Download</Text>
@@ -553,10 +554,12 @@ export default function ScheduleScreen() {
                   <Feather name="file-text" size={15} color={colors.primary} />
                   <Text style={s.actionBtnTxt}>Export CSV</Text>
                 </TouchableOpacity>
+                {!isPublicView && (
                 <TouchableOpacity style={[s.actionBtn, { backgroundColor: "#E65100" }]} onPress={() => setShowOverride(true)}>
                   <Feather name="refresh-cw" size={15} color="#fff" />
                   <Text style={s.actionBtnTxt}>Override</Text>
                 </TouchableOpacity>
+                )}
               </>
             ) : null}
           </View>
@@ -655,9 +658,9 @@ export default function ScheduleScreen() {
         </View>
       )}
 
-      <TouchableOpacity style={s.fab} onPress={() => { setForm(EMPTY_FORM); setShowAdd(true); }}>
+      {!isPublicView && <TouchableOpacity style={s.fab} onPress={() => { setForm(EMPTY_FORM); setShowAdd(true); }}>
         <Feather name="plus" size={26} color="#fff" />
-      </TouchableOpacity>
+      </TouchableOpacity>}
 
       <Modal visible={showAdd} animationType="slide" transparent onRequestClose={() => setShowAdd(false)}>
         <View style={s.modalOverlay}>

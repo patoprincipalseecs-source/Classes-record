@@ -38,6 +38,7 @@ export default function HolidaysScreen() {
   const [isRange, setIsRange] = useState(false);
 
   const params = useLocalSearchParams();
+  const isPublicView = String(params.isPublic) === "1";
   const scheduleId = params.scheduleId ? parseInt(String(params.scheduleId)) : undefined;
   const { data: holidays = [], isLoading } = useQuery({ queryKey: ["holidays", scheduleId], queryFn: () => fetchHolidays(scheduleId) });
 
@@ -121,13 +122,13 @@ export default function HolidaysScreen() {
             <Feather name="home" size={14} color="#fff" />
             <Text style={s.homeBtnTxt}>Home</Text>
           </TouchableOpacity>
-        </View>
+        </View>}
         <Text style={s.headerTitle}>Gazzetted Holidays</Text>
         <Text style={s.headerSub}>These days are excluded from ToBeConducted count</Text>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }} keyboardShouldPersistTaps="handled">
-        <View style={s.addCard}>
+        {!isPublicView && <View style={s.addCard}>
           <Text style={s.addTitle}>Add Holiday</Text>
           {/* Range toggle */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 }}>
@@ -179,7 +180,7 @@ export default function HolidaysScreen() {
           >
             {addMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={s.addBtnTxt}>Add Holiday</Text>}
           </TouchableOpacity>
-        </View>
+        </View>}
 
         <View style={s.list}>
           <Text style={s.listTitle}>{holidays.length} Holiday{holidays.length !== 1 ? "s" : ""} Recorded</Text>
@@ -196,14 +197,14 @@ export default function HolidaysScreen() {
                   <Text style={s.cardDate}>{new Date(h.date+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}</Text>
                   <Text style={s.cardName}>{h.name}</Text>
                 </View>
-                <TouchableOpacity onPress={() => {
+                {!isPublicView && <TouchableOpacity onPress={() => {
                   const confirmed = typeof window !== "undefined"
                     ? window.confirm(`Remove "${h.name}" (${new Date(h.date+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})})?`)
                     : true;
                   if (confirmed) deleteMutation.mutate(h.id);
                 }}>
                   <Feather name="trash-2" size={18} color={colors.destructive} />
-                </TouchableOpacity>
+                </TouchableOpacity>}
               </View>
             ))
           )}
