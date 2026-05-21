@@ -58,9 +58,9 @@ export function PickerModal({ visible, title, items, selected, onSelect, onClose
       borderBottomWidth: 1, borderBottomColor: colors.border,
       flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     },
-    itemActive: { backgroundColor: colors.secondary },
+    itemActive: { backgroundColor: colors.primaryLight || "#EEF4FF", borderRadius: 8 },
     itemText: { fontFamily: "Inter_400Regular", fontSize: 14, color: colors.foreground, flex: 1 },
-    itemTextActive: { fontFamily: "Inter_600SemiBold", color: colors.primary },
+    itemTextActive: { fontFamily: "Inter_700Bold", color: colors.primary },
     count: {
       paddingHorizontal: 20, paddingVertical: 8,
       backgroundColor: colors.muted,
