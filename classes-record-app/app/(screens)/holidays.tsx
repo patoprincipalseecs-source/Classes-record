@@ -142,7 +142,7 @@ export default function HolidaysScreen() {
               <View key={h.id} style={s.card}>
                 <Feather name="sun" size={22} color="#F59E0B" style={s.cardIcon} />
                 <View style={s.cardContent}>
-                  <Text style={s.cardDate}>{h.date}</Text>
+                  <Text style={s.cardDate}>{new Date(h.date+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}</Text>
                   <Text style={s.cardName}>{h.name}</Text>
                 </View>
                 <TouchableOpacity onPress={() => {

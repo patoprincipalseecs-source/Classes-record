@@ -187,7 +187,7 @@ export default function SummaryScreen() {
 </style></head><body>
 <div class="hdr">
   <h1>Teaching Summary</h1>
-  <p>${filterNote} &nbsp;·&nbsp; ${startDate} to ${endDate} &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString("en-PK", { weekday:"long", year:"numeric", month:"long", day:"numeric" })}</p>
+  <p>${filterNote} &nbsp;·&nbsp; ${new Date(startDate.slice(0,10)+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})} to ${new Date(endDate.slice(0,10)+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})} &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString("en-PK", { weekday:"long", year:"numeric", month:"long", day:"numeric" })}</p>
 </div>
 <div class="totals">
   <div class="tot-cell"><div class="tot-num">${totals.tbc}</div><div class="tot-lbl">To Be Conducted</div></div>

@@ -792,7 +792,7 @@ export default function AttendanceScreen() {
         <Text style={s.headerTitle}>Attendance</Text>
         <Text style={s.headerSub}>
           {scheduleTitle ?? "Schedule"}{publicMode ? " · Public view" : ""}
-          {hasDates ? `  ·  ${startDate} – ${endDate}` : ""}
+          {hasDates ? `  ·  ${new Date(startDate!.slice(0,10)+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})} – ${new Date(endDate!.slice(0,10)+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}` : ""}
         </Text>
       </View>
 
