@@ -113,10 +113,28 @@ export default function EntryScreen() {
 
   const classList = useMemo(() => {
     if (!faculty || !subject) return [];
-    const fromDB = [...new Set(schedule.filter((r) => !r.Type && r.Faculty === faculty && r.Subject === subject).map((r) => r.Class))].sort();
-    if (fromDB.length > 0) return fromDB;
-    const key = faculty + "|||" + subject;
-    return options?.facSubClasses[key] ?? options?.classes ?? [];
+    const rows = schedule.filter((r) => !r.Type && r.Faculty === faculty && r.Subject === subject);
+    const fromDB = [...new Set(rows.map((r) => r.Class))].sort();
+    if (!fromDB.length) {
+      const key = faculty + "|||" + subject;
+      return options?.facSubClasses[key] ?? options?.classes ?? [];
+    }
+    // Check if any rows are elective
+    const hasElective = rows.some((r) => (r.Elective || "").toLowerCase() === "elective");
+    if (hasElective) {
+      // Build merged elective class name e.g. 2K22-BEE-14ABCD
+      const classes = [...new Set(rows.map((r) => r.Class.toUpperCase()))];
+      const infos = classes.map((c) => {
+        const m = c.match(/^(2K\d{2}-[A-Z]+-\d+)([A-Z])$/);
+        return m ? { base: m[1], sec: m[2] } : null;
+      }).filter(Boolean) as { base: string; sec: string }[];
+      if (infos.length > 0) {
+        const base = infos[0].base;
+        const secs = [...new Set(infos.map((x) => x.sec))].sort().join("");
+        return [`ELECTIVE:${base}${secs}`, ...fromDB];
+      }
+    }
+    return fromDB;
   }, [schedule, options, faculty, subject]);
 
   const selectedDay = getDateDay(date);
@@ -124,9 +142,14 @@ export default function EntryScreen() {
   const { startSlots, endSlots, locationSlots } = useMemo(() => {
     if (!faculty || !subject || !cls || !date) return { startSlots: [], endSlots: [], locationSlots: [] };
 
-    const dayRows = schedule.filter(
-      (r) => !r.Type && r.Day === selectedDay && r.Faculty === faculty && r.Subject === subject && r.Class === cls
-    );
+    const isElective = cls.startsWith("ELECTIVE:");
+    const electiveClasses = isElective
+      ? schedule.filter((r) => !r.Type && r.Faculty === faculty && r.Subject === subject && (r.Elective||"").toLowerCase()==="elective").map((r) => r.Class)
+      : [];
+    const dayRows = schedule.filter((r) => {
+      if (isElective) return !r.Type && r.Day === selectedDay && r.Faculty === faculty && r.Subject === subject && (r.Elective||"").toLowerCase()==="elective";
+      return !r.Type && r.Day === selectedDay && r.Faculty === faculty && r.Subject === subject && r.Class === cls;
+    });
 
     if (type === "Missed" || type === "Late") {
       const busyHours = dayRows.map((r) => Math.floor((r.SortKey || 0) / 60));
@@ -139,8 +162,8 @@ export default function EntryScreen() {
         if (!r.Type && r.Day === selectedDay && r.Class === cls) return true;
         // Block hours where this faculty is scheduled on this day
         if (!r.Type && r.Day === selectedDay && r.Faculty === faculty) return true;
-        // Block makeup classes for same class on same date
-        if (r.Type === "Makeup" && r.Class === cls && r.EntryDate) {
+        // Block makeup classes for same class/elective on same date
+        if (r.Type === "Makeup" && (r.Class === cls || (isElective && electiveClasses.includes(r.Class))) && r.EntryDate) {
           const d = new Date(r.EntryDate);
           const s = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
           return s === date;

@@ -376,6 +376,62 @@ export default function SummaryScreen() {
           </View>
         </ScrollView>
 
+        {/* ── Export CSV button ── */}
+        {rows.length > 0 && (
+          <TouchableOpacity
+            style={{ flexDirection: "row", alignItems: "center", gap: 6, marginHorizontal: 16, marginBottom: 8, backgroundColor: colors.success, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 14, alignSelf: "flex-start" }}
+            onPress={() => {
+              const header = "Faculty,Subject,Class,Dept,Credit Hrs,To Be Conducted,Missed,Makeup,Late,Grand Total,Status\n";
+              const csvRows = rows.map(r => {
+                const status = r.GrandTotal < r.ToBeConducted ? "Deficit" : r.GrandTotal > r.ToBeConducted ? "Surplus" : "On Track";
+                return `"${r.Faculty}","${r.Subject}","${r.Class}","${r.dept}","${r.CreditHrs}",${r.ToBeConducted},${r.Missed},${r.Makeup},${r.Late},${r.GrandTotal},"${status}"`;
+              }).join("\n");
+              const csv = header + csvRows;
+              const blob = new Blob([csv], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url; a.download = `Teaching_Summary_${new Date().toISOString().slice(0,10)}.csv`;
+              document.body.appendChild(a); a.click();
+              document.body.removeChild(a); URL.revokeObjectURL(url);
+            }}
+          >
+            <Feather name="download" size={14} color="#fff" />
+            <Text style={{ color: "#fff", fontSize: 13, fontFamily: "Inter_600SemiBold" }}>Export CSV</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* ── Bar chart (TBC vs Grand Total) ── */}
+        {rows.length > 0 && (
+          <View style={{ marginHorizontal: 16, marginBottom: 12, backgroundColor: colors.card, borderRadius: 14, padding: 12, shadowColor: colors.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 2 }}>
+            <Text style={{ fontFamily: "Inter_700Bold", fontSize: 13, color: colors.foreground, marginBottom: 10 }}>TBC vs Grand Total</Text>
+            {(deptFilter !== "All" ? rows.slice(0, 10) : (() => {
+              const dmap: Record<string, {tbc:number,gt:number}> = {};
+              rows.forEach(r => { const d = r.dept || "Other"; if (!dmap[d]) dmap[d]={tbc:0,gt:0}; dmap[d].tbc+=r.ToBeConducted; dmap[d].gt+=r.GrandTotal; });
+              return Object.entries(dmap).map(([dept, v]) => ({ Subject: dept, ToBeConducted: v.tbc, GrandTotal: v.gt, Faculty: "", Class: "" } as any));
+            })()).map((r: any, i: number) => {
+              const maxVal = Math.max(r.ToBeConducted, r.GrandTotal, 1);
+              const label = deptFilter !== "All" ? `${r.Subject} · ${r.Class}` : r.Subject;
+              return (
+                <View key={i} style={{ marginBottom: 8 }}>
+                  <Text style={{ fontSize: 10, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 2 }} numberOfLines={1}>{label}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <View style={{ flex: r.ToBeConducted / maxVal, height: 10, backgroundColor: "#4285F4", borderRadius: 5, minWidth: 2 }} />
+                    <Text style={{ fontSize: 9, color: "#4285F4", fontFamily: "Inter_600SemiBold", width: 22 }}>{r.ToBeConducted}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}>
+                    <View style={{ flex: r.GrandTotal / maxVal, height: 10, backgroundColor: r.GrandTotal < r.ToBeConducted ? "#D32F2F" : "#0F9D58", borderRadius: 5, minWidth: 2 }} />
+                    <Text style={{ fontSize: 9, color: r.GrandTotal < r.ToBeConducted ? "#D32F2F" : "#0F9D58", fontFamily: "Inter_600SemiBold", width: 22 }}>{r.GrandTotal}</Text>
+                  </View>
+                </View>
+              );
+            })}
+            <View style={{ flexDirection: "row", gap: 14, marginTop: 6 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><View style={{ width: 12, height: 8, backgroundColor: "#4285F4", borderRadius: 2 }} /><Text style={{ fontSize: 10, color: colors.mutedForeground, fontFamily: "Inter_400Regular" }}>To Be Conducted</Text></View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><View style={{ width: 12, height: 8, backgroundColor: "#0F9D58", borderRadius: 2 }} /><Text style={{ fontSize: 10, color: colors.mutedForeground, fontFamily: "Inter_400Regular" }}>Grand Total</Text></View>
+            </View>
+          </View>
+        )}
+
         {/* ── Stats bar ── */}
         {rows.length > 0 && (
           <View style={s.summaryBar}>
