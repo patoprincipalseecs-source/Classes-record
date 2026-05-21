@@ -558,6 +558,26 @@ async function handleApi(method, pathname, req, res) {
   if (method === "DELETE" && pathname.match(/^\/api\/admin\/users\/\d+$/)) {
     const id = parseInt(pathname.split("/")[4]);
     try {
+      // First get all schedules owned by this user
+      const userRow = await db.query("SELECT username FROM public.users WHERE id=$1", [id]);
+      if (userRow.rows.length && userRow.rows[0].username !== ADMIN_USERNAME) {
+        const username = userRow.rows[0].username;
+        const userScheds = await db.query("SELECT id FROM public.schedules WHERE user_id=$1 OR username=$2", [id, username]);
+        for (const sched of userScheds.rows) {
+          const sid = sched.id;
+          await db.query("DELETE FROM public.attendance WHERE schedule_id=$1", [sid]);
+          await db.query("DELETE FROM public.students WHERE schedule_id=$1", [sid]);
+          await db.query("DELETE FROM public.faculty_accounts WHERE schedule_id=$1", [sid]);
+          await db.query("DELETE FROM public.finance_payments WHERE schedule_id=$1", [sid]);
+          await db.query("DELETE FROM public.finance_rates WHERE schedule_id=$1", [sid]);
+          await db.query("DELETE FROM public.holidays WHERE schedule_id=$1", [sid]);
+          await db.query("DELETE FROM public.weekly_schedule WHERE schedule_id=$1", [sid]);
+          try { await db.query("DELETE FROM public.finance_faculty WHERE schedule_id=$1", [sid]); } catch {}
+          try { await db.query("DELETE FROM public.support_staff WHERE schedule_id=$1", [sid]); } catch {}
+          try { await db.query("DELETE FROM public.exam_marks WHERE schedule_id=$1", [sid]); } catch {}
+          await db.query("DELETE FROM public.schedules WHERE id=$1", [sid]);
+        }
+      }
       const r = await db.query("DELETE FROM public.users WHERE id = $1 AND username != $2 RETURNING id", [id, ADMIN_USERNAME]);
       if (r.rows.length === 0) return json(res, 404, { success: false, message: "User not found or cannot delete admin" });
       return json(res, 200, { success: true });
@@ -707,8 +727,19 @@ async function handleApi(method, pathname, req, res) {
   if (method === "DELETE" && pathname.startsWith("/api/schedules/")) {
     const id = pathname.split("/")[3];
     try {
-      await db.query("DELETE FROM public.weekly_schedule WHERE schedule_id = $1", [id]);
-      await db.query("DELETE FROM public.schedules WHERE id = $1", [id]);
+      const sid = parseInt(id);
+      // Full cascade delete - remove ALL data for this schedule
+      await db.query("DELETE FROM public.attendance WHERE schedule_id = $1", [sid]);
+      await db.query("DELETE FROM public.students WHERE schedule_id = $1", [sid]);
+      await db.query("DELETE FROM public.faculty_accounts WHERE schedule_id = $1", [sid]);
+      await db.query("DELETE FROM public.finance_payments WHERE schedule_id = $1", [sid]);
+      await db.query("DELETE FROM public.finance_rates WHERE schedule_id = $1", [sid]);
+      await db.query("DELETE FROM public.holidays WHERE schedule_id = $1", [sid]);
+      await db.query("DELETE FROM public.weekly_schedule WHERE schedule_id = $1", [sid]);
+      try { await db.query("DELETE FROM public.finance_faculty WHERE schedule_id = $1", [sid]); } catch {}
+      try { await db.query("DELETE FROM public.support_staff WHERE schedule_id = $1", [sid]); } catch {}
+      try { await db.query("DELETE FROM public.exam_marks WHERE schedule_id = $1", [sid]); } catch {}
+      await db.query("DELETE FROM public.schedules WHERE id = $1", [sid]);
       return json(res, 200, { success: true });
     } catch (e) { return json(res, 500, { error: e.message }); }
   }
