@@ -33,16 +33,32 @@ export default function HolidaysScreen() {
   );
 
   const [newDate, setNewDate] = useState("");
+  const [newEndDate, setNewEndDate] = useState("");
   const [newName, setNewName] = useState("");
+  const [isRange, setIsRange] = useState(false);
 
   const params = useLocalSearchParams();
   const scheduleId = params.scheduleId ? parseInt(String(params.scheduleId)) : undefined;
   const { data: holidays = [], isLoading } = useQuery({ queryKey: ["holidays", scheduleId], queryFn: () => fetchHolidays(scheduleId) });
 
   const addMutation = useMutation({
-    mutationFn: () => addHoliday(newDate, newName, scheduleId),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["holidays"] }); setNewDate(""); setNewName(""); },
-    onError: () => Alert.alert("Error", "Failed to add holiday"),
+    mutationFn: async () => {
+      if (isRange && newEndDate && newEndDate > newDate) {
+        // Add all days in range
+        const start = new Date(newDate + "T00:00:00");
+        const end = new Date(newEndDate + "T00:00:00");
+        const promises = [];
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+          promises.push(addHoliday(iso, newName, scheduleId));
+        }
+        await Promise.all(promises);
+      } else {
+        await addHoliday(newDate, newName, scheduleId);
+      }
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["holidays"] }); setNewDate(""); setNewEndDate(""); setNewName(""); },
+    onError: () => { if (typeof window !== "undefined") window.alert("Failed to add holiday"); },
   });
 
   const deleteMutation = useMutation({
@@ -113,18 +129,44 @@ export default function HolidaysScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }} keyboardShouldPersistTaps="handled">
         <View style={s.addCard}>
           <Text style={s.addTitle}>Add Holiday</Text>
+          {/* Range toggle */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            <TouchableOpacity
+              style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: isRange ? colors.primary : colors.muted, borderWidth: 1, borderColor: isRange ? colors.primary : colors.border }}
+              onPress={() => setIsRange(false)}
+            >
+              <Feather name="calendar" size={13} color={isRange ? "#fff" : colors.mutedForeground} />
+              <Text style={{ fontSize: 12, fontFamily: "Inter_600SemiBold", color: isRange ? "#fff" : colors.mutedForeground }}>Single Day</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: isRange ? colors.muted : colors.primary, borderWidth: 1, borderColor: isRange ? colors.border : colors.primary }}
+              onPress={() => setIsRange(true)}
+            >
+              <Feather name="calendar" size={13} color={isRange ? colors.mutedForeground : "#fff"} />
+              <Text style={{ fontSize: 12, fontFamily: "Inter_600SemiBold", color: isRange ? colors.mutedForeground : "#fff" }}>Date Range</Text>
+            </TouchableOpacity>
+          </View>
+          {/* Start date */}
+          <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground, marginBottom: 4 }}>{isRange ? "Start Date" : "Date"}</Text>
           {Platform.OS === "web" ? (
-            <input
-              type="date"
-              value={newDate}
-              onChange={(e: any) => setNewDate(e.target.value)}
+            <input type="date" value={newDate} onChange={(e: any) => setNewDate(e.target.value)}
               style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${colors.border}`, fontSize: 15, fontFamily: "Inter_400Regular", color: colors.foreground, backgroundColor: colors.muted, marginBottom: 10, boxSizing: "border-box" } as any}
             />
           ) : (
-            <TextInput
-              style={s.input} value={newDate} onChangeText={setNewDate}
-              placeholder="YYYY-MM-DD" placeholderTextColor={colors.mutedForeground}
-            />
+            <TextInput style={s.input} value={newDate} onChangeText={setNewDate} placeholder="YYYY-MM-DD" placeholderTextColor={colors.mutedForeground} />
+          )}
+          {/* End date - only for range */}
+          {isRange && (
+            <>
+              <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground, marginBottom: 4 }}>End Date</Text>
+              {Platform.OS === "web" ? (
+                <input type="date" value={newEndDate} onChange={(e: any) => setNewEndDate(e.target.value)}
+                  style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${colors.border}`, fontSize: 15, fontFamily: "Inter_400Regular", color: colors.foreground, backgroundColor: colors.muted, marginBottom: 10, boxSizing: "border-box" } as any}
+                />
+              ) : (
+                <TextInput style={s.input} value={newEndDate} onChangeText={setNewEndDate} placeholder="YYYY-MM-DD" placeholderTextColor={colors.mutedForeground} />
+              )}
+            </>
           )}
           <TextInput
             style={s.input} value={newName} onChangeText={setNewName}
@@ -132,7 +174,7 @@ export default function HolidaysScreen() {
           />
           <TouchableOpacity
             style={[s.addBtn, (addMutation.isPending || !newDate || !newName) && { opacity: 0.5 }]}
-            disabled={addMutation.isPending || !newDate || !newName}
+            disabled={addMutation.isPending || !newDate || !newName || (isRange && !newEndDate)}
             onPress={() => addMutation.mutate()}
           >
             {addMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={s.addBtnTxt}>Add Holiday</Text>}
