@@ -1086,10 +1086,11 @@ async function handleApi(method, pathname, req, res) {
     if (!scheduleId || !className) return json(res, 400, { error: "scheduleId and className required" });
     try {
       const r = await db.query(
-        `SELECT a.student_id, a.date, a.session_time, a.status,
-                COALESCE(s.roll_no, '') as roll_no, COALESCE(s.name, '') as name
+        `SELECT a.id as att_id, a.date, a.session_time, a.status,
+                COALESCE(s.roll_no, '') as roll_no, COALESCE(s.name, '') as name,
+                s.id as student_id
          FROM public.attendance a
-         LEFT JOIN public.students s ON s.id = a.student_id
+         LEFT JOIN public.students s ON s.schedule_id=a.schedule_id AND s.class_name=a.class_name AND s.id=a.student_id
          WHERE a.schedule_id=$1 AND a.class_name=$2
          ORDER BY a.date, a.session_time, s.roll_no`,
         [parseInt(scheduleId), className]
