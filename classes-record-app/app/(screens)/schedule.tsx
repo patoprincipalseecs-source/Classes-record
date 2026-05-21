@@ -1,7 +1,4 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-  const allLocations = useMemo(() =>
-    [...new Set(rows.filter(r => r.Location && r.Location !== "_locations_").map(r => r.Location))].sort() as string[],
-  [rows]);
 import React, { useState, useMemo, useCallback } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
