@@ -328,8 +328,8 @@ export default function SummaryScreen() {
         {/* ── Filters ── */}
         <View style={s.filterSection}>
           <View style={s.dateRow}>
-            <TextInput style={s.dateInput} value={startDate} onChangeText={setStartDate} placeholder="Start YYYY-MM-DD" placeholderTextColor={colors.mutedForeground} />
-            <TextInput style={s.dateInput} value={endDate} onChangeText={setEndDate} placeholder="End YYYY-MM-DD" placeholderTextColor={colors.mutedForeground} />
+            <input type="date" value={startDate} onChange={(e:any)=>setStartDate(e.target.value)} style={{padding:"10px 12px",borderRadius:10,border:`1px solid ${colors.border}`,fontSize:14,fontFamily:"Inter_400Regular",color:colors.foreground,backgroundColor:colors.muted,flex:1} as any} placeholderTextColor={colors.mutedForeground} />
+            <input type="date" value={endDate} onChange={(e:any)=>setEndDate(e.target.value)} style={{padding:"10px 12px",borderRadius:10,border:`1px solid ${colors.border}`,fontSize:14,fontFamily:"Inter_400Regular",color:colors.foreground,backgroundColor:colors.muted,flex:1} as any} placeholderTextColor={colors.mutedForeground} />
           </View>
           <View style={s.quickBtns}>
             {[

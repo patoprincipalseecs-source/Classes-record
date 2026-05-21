@@ -113,10 +113,19 @@ export default function HolidaysScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }} keyboardShouldPersistTaps="handled">
         <View style={s.addCard}>
           <Text style={s.addTitle}>Add Holiday</Text>
-          <TextInput
-            style={s.input} value={newDate} onChangeText={setNewDate}
-            placeholder="Date (YYYY-MM-DD)" placeholderTextColor={colors.mutedForeground}
-          />
+          {Platform.OS === "web" ? (
+            <input
+              type="date"
+              value={newDate}
+              onChange={(e: any) => setNewDate(e.target.value)}
+              style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${colors.border}`, fontSize: 15, fontFamily: "Inter_400Regular", color: colors.foreground, backgroundColor: colors.muted, marginBottom: 10, boxSizing: "border-box" } as any}
+            />
+          ) : (
+            <TextInput
+              style={s.input} value={newDate} onChangeText={setNewDate}
+              placeholder="YYYY-MM-DD" placeholderTextColor={colors.mutedForeground}
+            />
+          )}
           <TextInput
             style={s.input} value={newName} onChangeText={setNewName}
             placeholder="Holiday name" placeholderTextColor={colors.mutedForeground}
