@@ -1369,6 +1369,22 @@ async function handleApi(method, pathname, req, res) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  // POST /api/schedule/override — clear regular entries, keep makeup/missed/attendance
+  if (method === "POST" && pathname === "/api/schedule/override") {
+    const { scheduleId } = body;
+    if (!scheduleId) return json(res, 400, { error: "scheduleId required" });
+    try {
+      // Only delete regular schedule rows (type IS NULL or empty) - keeps makeup/missed entries
+      const result = await db.query(
+        `DELETE FROM public.weekly_schedule
+         WHERE schedule_id = $1
+         AND (type IS NULL OR type = '')`,
+        [parseInt(scheduleId)]
+      );
+      return json(res, 200, { success: true, deleted: result.rowCount });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   // POST /api/fix-sortkeys — fix bad sort_key values
   if (method === "POST" && pathname === "/api/fix-sortkeys") {
     const { scheduleId } = body;

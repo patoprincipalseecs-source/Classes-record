@@ -154,6 +154,8 @@ export default function ScheduleScreen() {
   const [facFilter, setFacFilter] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [showOverride, setShowOverride] = useState(false);
+  const [overrideLoading, setOverrideLoading] = useState(false);
   const [activePicker, setActivePicker] = useState<PickerField>(null);
   const [form, setForm] = useState<AddForm>(EMPTY_FORM);
 
@@ -244,6 +246,30 @@ export default function ScheduleScreen() {
     });
     return map;
   }, [rows, classFilter, facFilter]);
+
+  async function handleOverrideSchedule(uri, name, mimeType, file) {
+    setOverrideLoading(true);
+    try {
+      const domain = process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com";
+      const delRes = await fetch("https://" + domain + "/api/schedule/override", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduleId })
+      });
+      if (!delRes.ok) throw new Error("Failed to clear schedule");
+      const result = await importScheduleExcel(uri, name, mimeType, scheduleId, file);
+      if (result.success || result.imported || result.inserted) {
+        qc.invalidateQueries({ queryKey: ["schedule", scheduleId] });
+        setShowOverride(false);
+        window.alert("Override complete! " + (result.imported || result.inserted || 0) + " entries updated. Past attendance preserved.");
+      } else {
+        throw new Error(result.error || "Import failed");
+      }
+    } catch(e) {
+      window.alert("Override failed: " + e.message);
+    }
+    setOverrideLoading(false);
+  }
 
   async function handleDownloadExcel() {
     const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -522,10 +548,16 @@ export default function ScheduleScreen() {
               <Text style={s.actionBtnTxt}>Download</Text>
             </TouchableOpacity>
             {scheduleId ? (
-              <TouchableOpacity style={s.actionBtn} onPress={handleDownloadExcel}>
-                <Feather name="file-text" size={15} color={colors.primary} />
-                <Text style={s.actionBtnTxt}>Export CSV</Text>
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity style={s.actionBtn} onPress={handleDownloadExcel}>
+                  <Feather name="file-text" size={15} color={colors.primary} />
+                  <Text style={s.actionBtnTxt}>Export CSV</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[s.actionBtn, { backgroundColor: "#E65100" }]} onPress={() => setShowOverride(true)}>
+                  <Feather name="refresh-cw" size={15} color="#fff" />
+                  <Text style={s.actionBtnTxt}>Override</Text>
+                </TouchableOpacity>
+              </>
             ) : null}
           </View>
         </View>
@@ -757,6 +789,23 @@ export default function ScheduleScreen() {
           onImport={importOptionsExcel}
           onSuccess={() => { setShowImport(false); qc.invalidateQueries({ queryKey: ["options"] }); }}
         />
+      </ImportPanel>
+      <ImportPanel visible={showOverride} onClose={() => { setShowOverride(false); setOverrideLoading(false); }} title="Override Weekly Schedule">
+        <View style={{ padding: 14, backgroundColor: "#FFF3E0", borderRadius: 12, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: "#E65100" }}>
+          <Text style={{ fontFamily: "Inter_700Bold", fontSize: 14, color: "#E65100", marginBottom: 6 }}>Warning</Text>
+          <Text style={{ fontFamily: "Inter_400Regular", fontSize: 13, color: "#BF360C", lineHeight: 20 }}>
+            {"Deletes ALL regular entries and replaces with uploaded CSV.\n\nPast attendance records preserved.\nAlready-marked attendance intact.\nAll current schedule rows replaced."}
+          </Text>
+        </View>
+        <ExcelImportButton
+          label="Upload Override CSV"
+          description="Format: Faculty, Subject, Class, Deptt, Day, Time, End Time, Location, Lec/Lab, Elective"
+          icon="refresh-cw"
+          variant="primary"
+          onImport={(uri, name, mimeType, file) => { handleOverrideSchedule(uri, name, mimeType, file); return Promise.resolve({ success: true }); }}
+          onSuccess={() => {}}
+        />
+        {overrideLoading && <ActivityIndicator color="#E65100" style={{ marginTop: 12 }} />}
       </ImportPanel>
 
       {Object.keys(pickerConfigs).map((key) => {
