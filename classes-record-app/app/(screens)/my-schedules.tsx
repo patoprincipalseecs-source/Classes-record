@@ -241,7 +241,7 @@ export default function MySchedulesScreen() {
       paddingHorizontal: 12, paddingVertical: 6,
     },
     homeBtnTxt: { color: "#fff", fontSize: 13, fontFamily: "Inter_600SemiBold" },
-    headerTitle: { color: "#fff", fontSize: 22, fontFamily: "Inter_700Bold" },
+    headerTitle: { color: "#fff", fontSize: 24, fontFamily: "Inter_700Bold" },
     headerSub: { color: "rgba(255,255,255,0.75)", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
 
     loginBox: { margin: 20, padding: 24, backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.border },
@@ -709,7 +709,7 @@ export default function MySchedulesScreen() {
   return (
                     <TouchableOpacity key={h}
                       onPress={() => { setStartHour(h); if(endHour<=h) setEndHour(h+1); }}
-                      style={{ paddingHorizontal:12, paddingVertical:7, borderRadius:8,
+                      style={{ paddingHorizontal:12, paddingVertical:7, borderRadius: 12,
                         backgroundColor:on?"#1565C0":"#F0F4F8", borderWidth:1, borderColor:on?"#1565C0":"#DDD" }}>
                       <Text style={{ fontSize:13, color:on?"#fff":"#333", fontFamily:"Inter_500Medium" }}>{lbl}</Text>
                     </TouchableOpacity>
@@ -741,7 +741,7 @@ export default function MySchedulesScreen() {
   return (
                     <TouchableOpacity key={h}
                       onPress={() => setEndHour(h)}
-                      style={{ paddingHorizontal:12, paddingVertical:7, borderRadius:8,
+                      style={{ paddingHorizontal:12, paddingVertical:7, borderRadius: 12,
                         backgroundColor:on?"#1565C0":"#F0F4F8", borderWidth:1, borderColor:on?"#1565C0":"#DDD" }}>
                       <Text style={{ fontSize:13, color:on?"#fff":"#333", fontFamily:"Inter_500Medium" }}>{lbl}</Text>
                     </TouchableOpacity>
@@ -771,7 +771,7 @@ export default function MySchedulesScreen() {
   return (
                   <TouchableOpacity key={d}
                     onPress={() => setActiveDays(prev => on ? prev.filter(x=>x!==d) : [...prev, d])}
-                    style={{ paddingHorizontal:14, paddingVertical:8, borderRadius:8,
+                    style={{ paddingHorizontal:14, paddingVertical:8, borderRadius: 12,
                       backgroundColor:on?"#1565C0":"#F0F4F8", borderWidth:1, borderColor:on?"#1565C0":"#DDD" }}>
                     <Text style={{ fontSize:14, color:on?"#fff":"#333", fontFamily:"Inter_600SemiBold" }}>{d}</Text>
                   </TouchableOpacity>

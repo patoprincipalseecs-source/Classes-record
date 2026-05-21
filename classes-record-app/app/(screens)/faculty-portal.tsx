@@ -173,11 +173,11 @@ export default function FacultyPortalScreen() {
       paddingHorizontal: 12, paddingVertical: 6,
     },
     signOutTxt: { color: "#fff", fontSize: 13, fontFamily: "Inter_600SemiBold" },
-    headerTitle: { color: "#fff", fontSize: 22, fontFamily: "Inter_700Bold" },
+    headerTitle: { color: "#fff", fontSize: 24, fontFamily: "Inter_700Bold" },
     headerSub: { color: "rgba(255,255,255,0.8)", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 3 },
     headerBadge: {
       flexDirection: "row", alignItems: "center", gap: 6,
-      backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 8,
+      backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 12,
       paddingHorizontal: 10, paddingVertical: 5, marginTop: 8, alignSelf: "flex-start",
     },
     headerBadgeTxt: { color: "#fff", fontSize: 12, fontFamily: "Inter_400Regular" },
@@ -211,7 +211,7 @@ export default function FacultyPortalScreen() {
       shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
     },
-    iconCircle: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center", marginBottom: 14 },
+    iconCircle: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", marginBottom: 10 },
     tileTitle: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 4 },
     tileSub: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
 

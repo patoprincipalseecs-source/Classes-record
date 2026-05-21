@@ -428,7 +428,7 @@ export default function AttendanceScreen() {
       paddingHorizontal: 12, paddingVertical: 6,
     },
     navBtnTxt: { color: "#fff", fontSize: 13, fontFamily: "Inter_600SemiBold" },
-    headerTitle: { color: "#fff", fontSize: 20, fontFamily: "Inter_700Bold" },
+    headerTitle: { color: "#fff", fontSize: 22, fontFamily: "Inter_700Bold" },
     headerSub: { color: "rgba(255,255,255,0.8)", fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
     classPickerRow: {
       flexDirection: "row", alignItems: "center", gap: 8,
@@ -488,7 +488,7 @@ export default function AttendanceScreen() {
     expandedHeaderTxt: { color: "#fff", fontFamily: "Inter_700Bold", fontSize: 13 },
     saveBtn: {
       flexDirection: "row", alignItems: "center", gap: 6,
-      backgroundColor: "#fff", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
+      backgroundColor: "#fff", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6,
     },
     saveBtnTxt: { color: "#1976D2", fontFamily: "Inter_700Bold", fontSize: 12 },
     studentRow: {
@@ -511,13 +511,13 @@ export default function AttendanceScreen() {
       backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border,
     },
     manualInput: {
-      flex: 1, backgroundColor: colors.muted, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8,
+      flex: 1, backgroundColor: colors.muted, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8,
       fontFamily: "Inter_400Regular", fontSize: 13, color: colors.foreground,
       borderWidth: 1, borderColor: colors.border,
     },
     manualLoadBtn: {
       flexDirection: "row", alignItems: "center", gap: 5,
-      backgroundColor: colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 9,
+      backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 9,
     },
     manualLoadBtnTxt: { color: "#fff", fontFamily: "Inter_700Bold", fontSize: 13 },
 
@@ -543,11 +543,11 @@ export default function AttendanceScreen() {
     },
     addInput: {
       backgroundColor: colors.muted, borderWidth: 1, borderColor: colors.border,
-      borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8,
+      borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8,
       fontFamily: "Inter_400Regular", fontSize: 13, color: colors.foreground,
     },
     addBtn: {
-      backgroundColor: colors.primary, borderRadius: 8, paddingHorizontal: 14,
+      backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 14,
       alignItems: "center", justifyContent: "center",
     },
     bulkRow: {
@@ -557,13 +557,13 @@ export default function AttendanceScreen() {
     },
     bulkBtn: {
       flex: 1, flexDirection: "row", alignItems: "center", gap: 6,
-      backgroundColor: colors.muted, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 9,
+      backgroundColor: colors.muted, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 9,
       borderWidth: 1, borderColor: colors.border,
     },
     bulkBtnTxt: { fontFamily: "Inter_500Medium", fontSize: 13, color: colors.foreground },
     sampleBtn: {
       flexDirection: "row", alignItems: "center", gap: 5,
-      borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9,
+      borderRadius: 12, paddingHorizontal: 10, paddingVertical: 9,
       borderWidth: 1, borderColor: colors.primary,
     },
     sampleBtnTxt: { fontFamily: "Inter_500Medium", fontSize: 12, color: colors.primary },

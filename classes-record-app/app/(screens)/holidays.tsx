@@ -63,7 +63,7 @@ export default function HolidaysScreen() {
       paddingHorizontal: 12, paddingVertical: 6, alignSelf: "flex-start", marginBottom: 10,
     },
     homeBtnTxt: { color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 13 },
-    headerTitle: { color: "#fff", fontSize: 22, fontFamily: "Inter_700Bold" },
+    headerTitle: { color: "#fff", fontSize: 24, fontFamily: "Inter_700Bold" },
     headerSub: { color: "rgba(255,255,255,0.8)", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
     addCard: {
       backgroundColor: colors.card, margin: 12, borderRadius: 12, padding: 16,

@@ -220,7 +220,7 @@ export default function EntryScreen() {
       paddingHorizontal: 12, paddingVertical: 6, alignSelf: "flex-start", marginBottom: 10,
     },
     homeBtnTxt: { color: typeTextColors[type], fontFamily: "Inter_600SemiBold", fontSize: 13 },
-    headerTitle: { fontSize: 22, fontFamily: "Inter_700Bold", color: "#fff" },
+    headerTitle: { fontSize: 24, fontFamily: "Inter_700Bold", color: "#fff" },
     headerSub: { fontSize: 13, fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.8)", marginTop: 2 },
     scroll: { padding: 16 },
     label: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, marginBottom: 6, marginTop: 16, textTransform: "uppercase", letterSpacing: 0.5 },
@@ -232,7 +232,7 @@ export default function EntryScreen() {
     pickerTxt: { fontFamily: "Inter_400Regular", fontSize: 14, color: colors.mutedForeground, flex: 1 },
     pickerTxtActive: { color: colors.foreground, fontFamily: "Inter_500Medium" },
     optRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-    optBtn: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card },
+    optBtn: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card },
     optBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
     optTxt: { fontFamily: "Inter_500Medium", fontSize: 13, color: colors.foreground },
     optTxtActive: { color: "#fff" },
@@ -305,7 +305,7 @@ export default function EntryScreen() {
           </View>
           <TouchableOpacity
             onPress={() => setShowImport(true)}
-            style={{ backgroundColor: `${typeColors[type]}55`, borderRadius: 8, padding: 8, borderWidth: 1, borderColor: `${typeTextColors[type]}44` }}
+            style={{ backgroundColor: `${typeColors[type]}55`, borderRadius: 12, padding: 8, borderWidth: 1, borderColor: `${typeTextColors[type]}44` }}
           >
             <Feather name="upload" size={18} color={typeTextColors[type]} />
           </TouchableOpacity>
