@@ -176,6 +176,20 @@ export async function deleteScheduleRow(id: number) {
   return res.json();
 }
 
+export async function deleteUserSchedule(id: number) {
+  const res = await fetch(`${API_BASE}/schedules/${id}`, { method: "DELETE" });
+  return res.json();
+}
+
+export async function toggleSchedulePublic(id: number, isPublic: boolean) {
+  const res = await fetch(`${API_BASE}/schedules/${id}/public`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ isPublic }),
+  });
+  return res.json();
+}
+
 export async function addScheduleEntry(data: { faculty: string; subject: string; className: string; dept: string; day: string; location: string; timeStart: string; timeEnd: string; lecLab: string; elective?: string; userEmail?: string; scheduleId?: number }) {
   const res = await fetch(`${API_BASE}/schedule/entry`, {
     method: "POST",
