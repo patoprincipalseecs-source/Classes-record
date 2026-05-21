@@ -14,17 +14,12 @@ import { Feather } from "@expo/vector-icons";
 import { fetchPublicSchedules } from "@/hooks/useApi";
 
 const TILES = [
-  { route: "/(screens)/schedule",      emoji: "📅", title: "Weekly Schedule",      subtitle: "Mon–Fri timetable",           color: "#1565C0", bg: "#E3F2FD" },
-  { route: "/(screens)/entry",         emoji: "✏️",  title: "New Entry",            subtitle: "Missed · Late · Makeup",      color: "#E65100", bg: "#FFF3E0" },
-  { route: "/(screens)/summary",       emoji: "📊", title: "Teaching Summary",     subtitle: "TBC · Deficit · Surplus",     color: "#2E7D32", bg: "#E8F5E9" },
-  { route: "/(screens)/meeting",       emoji: "👥", title: "Meeting Availability", subtitle: "Check who is free",           color: "#6A1B9A", bg: "#F3E5F5" },
-  { route: "/(screens)/holidays",      emoji: "🗓️", title: "Gazzetted Holidays",   subtitle: "Excluded from TBC count",     color: "#00695C", bg: "#E0F2F1" },
-  { route: "/(screens)/my-schedules",  emoji: "🔒", title: "My Schedules",         subtitle: "Private · Login required",    color: "#AD1457", bg: "#FCE4EC" },
-  { route: "/(screens)/finance",       emoji: "💰", title: "Account & Finance",    subtitle: "Fees · Salary · Payments",    color: "#F57F17", bg: "#FFFDE7" },
-  { route: "/(screens)/tutorial",      emoji: "📖", title: "Tutorial",             subtitle: "Guide · Examples · PDF",      color: "#283593", bg: "#E8EAF6" },
+  { route: "/(screens)/my-schedules",  emoji: "🔒", title: "My Schedules",         subtitle: "Schedule · Attendance · Summary", color: "#AD1457", bg: "#FCE4EC" },
   { route: "/(screens)/faculty-portal",emoji: "👤", title: "Faculty Sign In",      subtitle: "Attendance · Exam marks",     color: "#00695C", bg: "#E0F2F1" },
-  { route: "/(screens)/contact",       emoji: "📞", title: "Contact Us",           subtitle: "Alamdar Hussain · Islamabad", color: "#1565C0", bg: "#E3F2FD" },
+  { route: "/(screens)/finance",       emoji: "💰", title: "Account & Finance",    subtitle: "Fees · Salary · Payments",    color: "#F57F17", bg: "#FFFDE7" },
   { route: "/(screens)/admin-panel",   emoji: "🛡️", title: "Admin Panel",          subtitle: "Users · Passwords · CSV",     color: "#4A148C", bg: "#EDE7F6" },
+  { route: "/(screens)/tutorial",      emoji: "📖", title: "Tutorial",             subtitle: "Guide · Examples · PDF",      color: "#283593", bg: "#E8EAF6" },
+  { route: "/(screens)/contact",       emoji: "📞", title: "Contact Us",           subtitle: "Alamdar Hussain · Islamabad", color: "#1565C0", bg: "#E3F2FD" },
 ];
 
 export default function DashboardScreen() {
