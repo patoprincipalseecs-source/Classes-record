@@ -69,9 +69,9 @@ function MiniCard({ row, colors, onCopy, onDelete, isCopied }: { row: ScheduleRo
   const isMakeup = row.Type === "Makeup";
   return (
     <TouchableOpacity onPress={onCopy} style={{
-      backgroundColor: isCopied ? "#FFF9C4" : isMakeup ? colors.successBg : colors.secondary,
+      backgroundColor: isCopied ? "#FFF9C4" : isMakeup ? "#E8F5E9" : "#EEF4FF",
       borderRadius: 6, padding: 4, marginBottom: 3,
-      borderLeftWidth: 3, borderLeftColor: isCopied ? "#F9A825" : isMakeup ? "#4CAF50" : colors.primary,
+      borderLeftWidth: 3, borderLeftColor: isCopied ? "#F9A825" : isMakeup ? "#4CAF50" : "#2563EB",
     }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
         <Text numberOfLines={2} style={{ fontSize: 11, fontFamily: "Inter_600SemiBold", color: colors.foreground, flex: 1 }}>
