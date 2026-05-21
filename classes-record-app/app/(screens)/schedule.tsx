@@ -188,6 +188,9 @@ export default function ScheduleScreen() {
     const fromOpts = options?.faculty ?? [];
     return [...new Set([...fromDB, ...fromOpts])].sort();
   }, [rows, options]);
+  const allLocations = useMemo(() => {
+    return [...new Set(rows.filter(r => r.Location && r.Location !== "_locations_").map(r => r.Location))].sort() as string[];
+  }, [rows]);
 
   const formSubjects = useMemo(() => {
     if (!options || !form.faculty) return options?.subjects ?? [];
