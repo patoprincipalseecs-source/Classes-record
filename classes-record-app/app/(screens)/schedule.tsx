@@ -1,4 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+  const allLocations = useMemo(() =>
+    [...new Set(rows.filter(r => r.Location && r.Location !== "_locations_").map(r => r.Location))].sort() as string[],
+  [rows]);
 import React, { useState, useMemo, useCallback } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
@@ -57,7 +60,7 @@ const ELECTIVE_OPTIONS = [{ label: "Regular", value: "" }, { label: "Elective", 
 const HOUR_OPTIONS = Array.from({ length: 9 }, (_, i) => formatHour(i + 9));
 
 type PickerField = "faculty" | "subject" | "className" | "dept" | "location"
-  | "filterFaculty" | "filterClass" | null;
+  | "filterFaculty" | "filterClass" | "filterLocation" | null;
 
 const EMPTY_FORM: AddForm = {
   faculty: "", subject: "", className: "", dept: "",
@@ -153,6 +156,7 @@ export default function ScheduleScreen() {
 
   const [classFilter, setClassFilter] = useState("");
   const [facFilter, setFacFilter] = useState("");
+  const [locFilter, setLocFilter] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showOverride, setShowOverride] = useState(false);
@@ -223,6 +227,7 @@ export default function ScheduleScreen() {
     const filtered = rows.filter((r) => {
       if (classFilter && r.Class !== classFilter) return false;
       if (facFilter && r.Faculty !== facFilter) return false;
+      if (locFilter && r.Location !== locFilter) return false;
       return true;
     });
     const map: Record<number, Record<string, ScheduleRow[]>> = {};
@@ -246,7 +251,7 @@ export default function ScheduleScreen() {
       if (map[h]?.[day]) map[h][day].push(r);
     });
     return map;
-  }, [rows, classFilter, facFilter]);
+  }, [rows, classFilter, facFilter, locFilter]);
 
   async function handleOverrideSchedule(uri, name, mimeType, file) {
     setOverrideLoading(true);
@@ -277,6 +282,7 @@ export default function ScheduleScreen() {
     const filtered = rows.filter((r) => {
       if (classFilter && r.Class !== classFilter) return false;
       if (facFilter && r.Faculty !== facFilter) return false;
+      if (locFilter && r.Location !== locFilter) return false;
       if (r.Type === "Missed" || r.Type === "Late") return false;
       if ((r.SortKey ?? 0) < 0) return false;
       if (r.Type === "Makeup" && r.EntryDate) {
@@ -312,6 +318,7 @@ export default function ScheduleScreen() {
     const filtered = rows.filter((r) => {
       if (classFilter && r.Class !== classFilter) return false;
       if (facFilter && r.Faculty !== facFilter) return false;
+      if (locFilter && r.Location !== locFilter) return false;
       if (r.Type === "Missed" || r.Type === "Late") return false;
       if ((r.SortKey ?? 0) < 0) return false;
       if (r.Type === "Makeup" && r.EntryDate) {
@@ -334,8 +341,8 @@ export default function ScheduleScreen() {
       if (gridMap[h]?.[day]) gridMap[h][day].push(r);
     });
 
-    const filterNote = [classFilter && `Class: ${classFilter}`, facFilter && `Faculty: ${facFilter}`]
-      .filter(Boolean).join(" · ") || "All Classes · All Faculty";
+    const filterNote = [classFilter && `Class: ${classFilter}`, facFilter && `Faculty: ${facFilter}`, locFilter && `Location: ${locFilter}`]
+      .filter(Boolean).join(" · ") || "All Classes · All Faculty · All Locations";
 
     const cellHtml = (entries: ScheduleRow[]) => {
       if (entries.length === 0) return `<span class="free">—</span>`;
@@ -587,6 +594,15 @@ export default function ScheduleScreen() {
               ? <TouchableOpacity style={s.filterClear} onPress={() => setFacFilter("")}><Feather name="x" size={13} color="#fff" /></TouchableOpacity>
               : <Feather name="chevron-down" size={13} color="rgba(255,255,255,0.75)" />}
           </TouchableOpacity>
+          <TouchableOpacity style={[s.filterBtn, locFilter && s.filterBtnActive]} onPress={() => setActivePicker("filterLocation")}>
+            <Feather name="map-pin" size={13} color="rgba(255,255,255,0.75)" />
+            <Text style={[s.filterBtnText, locFilter && s.filterBtnTextActive]} numberOfLines={1}>
+              {locFilter || "All Locations"}
+            </Text>
+            {locFilter
+              ? <TouchableOpacity style={s.filterClear} onPress={() => setLocFilter("")}><Feather name="x" size={13} color="#fff" /></TouchableOpacity>
+              : <Feather name="chevron-down" size={13} color="rgba(255,255,255,0.75)" />}
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -829,17 +845,25 @@ export default function ScheduleScreen() {
       <PickerModal
         visible={activePicker === "filterClass"}
         title="Filter by Class"
-        items={allClasses}
-        selected={classFilter}
-        onSelect={(v) => { setClassFilter(v); setActivePicker(null); }}
+        items={["All Classes", ...allClasses]}
+        selected={classFilter || "All Classes"}
+        onSelect={(v) => { setClassFilter(v === "All Classes" ? "" : v); setActivePicker(null); }}
         onClose={() => setActivePicker(null)}
       />
       <PickerModal
         visible={activePicker === "filterFaculty"}
         title="Filter by Faculty"
-        items={allFaculty}
-        selected={facFilter}
-        onSelect={(v) => { setFacFilter(v); setActivePicker(null); }}
+        items={["All Faculty", ...allFaculty]}
+        selected={facFilter || "All Faculty"}
+        onSelect={(v) => { setFacFilter(v === "All Faculty" ? "" : v); setActivePicker(null); }}
+        onClose={() => setActivePicker(null)}
+      />
+      <PickerModal
+        visible={activePicker === "filterLocation"}
+        title="Filter by Location"
+        items={["All Locations", ...allLocations]}
+        selected={locFilter || "All Locations"}
+        onSelect={(v) => { setLocFilter(v === "All Locations" ? "" : v); setActivePicker(null); }}
         onClose={() => setActivePicker(null)}
       />
       {/* ── Settings Modal: Hours & Days ── */}
