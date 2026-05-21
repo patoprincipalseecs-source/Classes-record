@@ -147,7 +147,7 @@ export default function HolidaysScreen() {
             </TouchableOpacity>
           </View>
           {/* Start date */}
-          <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground, marginBottom: 4 }}>{isRange ? "Start Date" : "Date"}</Text>
+          <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground, marginBottom: 4 }}>{isRange ? "Start Date" : "Select Date"}</Text>
           {Platform.OS === "web" ? (
             <input type="date" value={newDate} onChange={(e: any) => setNewDate(e.target.value)}
               style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${colors.border}`, fontSize: 15, fontFamily: "Inter_400Regular", color: colors.foreground, backgroundColor: colors.muted, marginBottom: 10, boxSizing: "border-box" } as any}
@@ -197,12 +197,12 @@ export default function HolidaysScreen() {
                   <Text style={s.cardName}>{h.name}</Text>
                 </View>
                 <TouchableOpacity onPress={() => {
-                  Alert.alert("Remove Holiday", `Remove "${h.name}"?`, [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Remove", style: "destructive", onPress: () => deleteMutation.mutate(h.id) },
-                  ]);
+                  const confirmed = typeof window !== "undefined"
+                    ? window.confirm(`Remove "${h.name}" (${new Date(h.date+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})})?`)
+                    : true;
+                  if (confirmed) deleteMutation.mutate(h.id);
                 }}>
-                  <Feather name="trash-2" size={18} color={colors.mutedForeground} />
+                  <Feather name="trash-2" size={18} color={colors.destructive} />
                 </TouchableOpacity>
               </View>
             ))
