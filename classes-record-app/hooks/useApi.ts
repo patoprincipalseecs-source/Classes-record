@@ -130,7 +130,8 @@ export async function fetchSummary(start?: string, end?: string, scheduleId?: nu
 export async function fetchHolidays(scheduleId?: number) {
   const url = scheduleId != null ? `${API_BASE}/holidays?scheduleId=${scheduleId}` : `${API_BASE}/holidays`;
   const res = await fetch(url);
-  return res.json();
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
 export async function addHoliday(date: string, name: string, scheduleId?: number) {

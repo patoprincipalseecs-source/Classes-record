@@ -897,9 +897,11 @@ async function handleApi(method, pathname, req, res) {
     const scheduleId = reqUrl.searchParams.get("scheduleId");
     const sidInt = scheduleId && !isNaN(parseInt(scheduleId)) ? parseInt(scheduleId) : null;
     try {
+      // Ensure schedule_id column exists
+      await db.query("ALTER TABLE public.holidays ADD COLUMN IF NOT EXISTS schedule_id INTEGER REFERENCES public.schedules(id) ON DELETE CASCADE");
       const r = sidInt
         ? await db.query("SELECT id, date::text as date, trim(both '\r\n' from name) as name FROM public.holidays WHERE schedule_id = $1 ORDER BY date", [sidInt])
-        : await db.query("SELECT id, date::text as date, trim(both '\r\n' from name) as name FROM public.holidays ORDER BY date");
+        : await db.query("SELECT id, date::text as date, trim(both '\r\n' from name) as name FROM public.holidays WHERE schedule_id IS NULL ORDER BY date");
       return json(res, 200, r.rows);
     } catch (e) { return json(res, 500, { error: e.message }); }
   }
