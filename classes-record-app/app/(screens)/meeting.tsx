@@ -94,69 +94,72 @@ export default function MeetingScreen() {
     if (!result) { Alert.alert("No Report", "Generate a report first before downloading."); return; }
 
     const facNote = selectedFaculty.length > 0 ? selectedFaculty.join(", ") : "All Faculty";
-
-    const deptBreakdown = Object.entries(result.summary).sort()
-      .map(([dept, counts]) => `<tr>
-        <td>${dept}</td>
-        <td style="text-align:center;color:#388E3C;font-weight:bold">${counts.free}</td>
-        <td style="text-align:center;color:#D32F2F;font-weight:bold">${counts.busy}</td>
-      </tr>`).join("");
-
-    const freeRows = result.free.map((f) =>
-      `<tr><td><span style="color:#388E3C">●</span> ${f.name}</td><td style="color:#555">${f.dept}</td></tr>`
-    ).join("");
-
-    const busyRows = result.busy.map((b) => {
-      const records = b.records.map((r) =>
-        `<div style="background:#FFF3F3;border-left:3px solid #F44336;border-radius:3px;padding:3px 6px;margin-top:4px;font-size:9px">
-          <b>${r.subject}</b> · ${r.cls}<br/>
-          <span style="color:#888">${formatHM(r.start)} – ${formatHM(r.end)} · ${r.loc} · ${r.type}</span>
-        </div>`
-      ).join("");
-      return `<tr>
-        <td style="white-space:nowrap"><span style="color:#D32F2F">●</span> <b>${b.name}</b></td>
-        <td><span style="color:#888;font-size:9px">${b.dept}</span>${records}</td>
-      </tr>`;
+    // Department breakdown with Grand Total
+    const deptEntries = Object.entries(result.summary).sort();
+    const grandFree = deptEntries.reduce((s, [, c]) => s + (c as any).free, 0);
+    const grandBusy = deptEntries.reduce((s, [, c]) => s + (c as any).busy, 0);
+    const grandTotal = grandFree + grandBusy;
+    const deptBreakdown = deptEntries.map(([dept, counts]: any) =>
+      `<tr><td>${dept}</td><td style="text-align:center;color:#2E7D32;font-weight:bold">${counts.free}</td><td style="text-align:center;color:#C62828;font-weight:bold">${counts.busy}</td><td style="text-align:center;font-weight:bold">${counts.free + counts.busy}</td></tr>`
+    ).join("") + `<tr style="background:#E3F2FD;font-weight:bold"><td>Grand Total</td><td style="text-align:center;color:#2E7D32">${grandFree}</td><td style="text-align:center;color:#C62828">${grandBusy}</td><td style="text-align:center">${grandTotal}</td></tr>`;
+    // FREE faculty grouped by dept
+    const freeDepts = [...new Set(result.free.map((f: any) => f.dept))].sort() as string[];
+    const freeByDept = freeDepts.map(dept => {
+      const members = result.free.filter((f: any) => f.dept === dept);
+      return `<tr style="background:#F1F8E9"><td colspan="2" style="font-weight:bold;color:#2E7D32;font-size:11px">${dept} (${members.length})</td></tr>` +
+        members.map((f: any) => `<tr><td>${f.name}</td><td style="color:#555">${f.dept}</td></tr>`).join("");
     }).join("");
-
+    // BUSY faculty grouped by dept with schedule details
+    const busyDepts = [...new Set(result.busy.map((b: any) => b.dept))].sort() as string[];
+    const busyByDept = busyDepts.map(dept => {
+      const members = result.busy.filter((b: any) => b.dept === dept);
+      const rows = members.map((b: any) => {
+        const records = b.records.map((r: any) =>
+          `<tr style="background:#FFF8F8"><td style="padding-left:20px;color:#C62828">${r.subject}</td><td>${r.cls}</td><td>${r.loc}</td><td style="white-space:nowrap">${formatHM(r.start)} – ${formatHM(r.end)}</td><td>${r.type}</td></tr>`
+        ).join("");
+        return `<tr style="background:#FFEBEE"><td colspan="5" style="font-weight:bold;color:#C62828">● ${b.name} — ${b.dept}</td></tr>${records}`;
+      }).join("");
+      return `<tr style="background:#FFCDD2"><td colspan="5" style="font-weight:bold;color:#B71C1C;font-size:11px">${dept} (${members.length})</td></tr>${rows}`;
+    }).join("");
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, sans-serif; font-size: 11px; }
-  .hdr { background: #1976D2; color: #fff; padding: 12px 16px; }
-  .hdr h1 { font-size: 17px; font-weight: bold; }
-  .hdr p { font-size: 10px; opacity: .85; margin-top: 2px; }
-  .summary-boxes { display: flex; gap: 0; border-bottom: 1px solid #E0E0E0; }
-  .box { flex: 1; padding: 12px; text-align: center; border-right: 1px solid #E0E0E0; }
-  .box:last-child { border-right: none; }
-  .box-num { font-size: 32px; font-weight: bold; }
-  .box-lbl { font-size: 10px; color: #555; margin-top: 2px; }
-  .section-title { background: #F5F5F5; padding: 6px 12px; font-weight: bold; font-size: 12px; color: #333; border-top: 2px solid #1976D2; border-bottom: 1px solid #E0E0E0; margin-top: 8px; }
+  body { font-family: Arial, sans-serif; font-size: 11px; background: #fff; }
+  .hdr { background: #1565C0; color: #fff; padding: 14px 18px; }
+  .hdr h1 { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+  .hdr p { font-size: 11px; opacity: .9; margin-top: 3px; }
+  .meta { display: flex; border-bottom: 2px solid #1565C0; }
+  .meta-box { flex: 1; padding: 10px 14px; border-right: 1px solid #E0E0E0; }
+  .meta-box:last-child { border-right: none; }
+  .meta-label { font-size: 9px; color: #888; text-transform: uppercase; }
+  .meta-value { font-size: 13px; font-weight: bold; color: #1565C0; margin-top: 2px; }
+  .section-title { padding: 7px 14px; font-weight: bold; font-size: 12px; border-left: 4px solid #1565C0; margin: 10px 0 0 0; background: #F5F5F5; }
   table { width: 100%; border-collapse: collapse; }
-  td { border: 1px solid #E0E0E0; padding: 6px 8px; font-size: 10px; vertical-align: top; }
-  th { background: #1976D2; color: #fff; padding: 6px 8px; font-size: 10px; text-align: left; }
+  td, th { border: 1px solid #E0E0E0; padding: 5px 8px; font-size: 10px; vertical-align: top; }
+  th { background: #1565C0; color: #fff; padding: 6px 8px; font-size: 10px; text-align: left; }
   tr { page-break-inside: avoid; }
 </style></head><body>
 <div class="hdr">
   <h1>Meeting Availability Report</h1>
-  <p>${result.dayName}, ${result.date} &nbsp;·&nbsp; ${result.start} – ${result.end} &nbsp;·&nbsp; ${facNote}</p>
-  <p style="margin-top:4px">Generated ${new Date().toLocaleDateString("en-PK", { weekday:"long", year:"numeric", month:"long", day:"numeric" })}</p>
+  <p>Date: ${result.date} &nbsp;&nbsp; Day: ${result.dayName}</p>
+  <p>Time: ${result.start} – ${result.end}</p>
 </div>
-<div class="summary-boxes">
-  <div class="box"><div class="box-num" style="color:#388E3C">${result.free.length}</div><div class="box-lbl">Free Faculty</div></div>
-  <div class="box"><div class="box-num" style="color:#D32F2F">${result.busy.length}</div><div class="box-lbl">Busy Faculty</div></div>
-  <div class="box"><div class="box-num" style="color:#1976D2">${result.free.length + result.busy.length}</div><div class="box-lbl">Total Checked</div></div>
+<div class="meta">
+  <div class="meta-box"><div class="meta-label">Free Faculty</div><div class="meta-value" style="color:#2E7D32">${result.free.length}</div></div>
+  <div class="meta-box"><div class="meta-label">Busy Faculty</div><div class="meta-value" style="color:#C62828">${result.busy.length}</div></div>
+  <div class="meta-box"><div class="meta-label">Total Checked</div><div class="meta-value">${result.free.length + result.busy.length}</div></div>
+  <div class="meta-box"><div class="meta-label">Generated</div><div class="meta-value" style="font-size:10px">${new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}</div></div>
 </div>
-${Object.keys(result.summary).length > 0 ? `
-<div class="section-title">Department Breakdown</div>
-<table><thead><tr><th>Department</th><th style="text-align:center">Free</th><th style="text-align:center">Busy</th></tr></thead>
+${deptEntries.length > 0 ? `
+<div class="section-title">Department Summary</div>
+<table><thead><tr><th>Department</th><th style="text-align:center">Free</th><th style="text-align:center">Busy</th><th style="text-align:center">Total</th></tr></thead>
 <tbody>${deptBreakdown}</tbody></table>` : ""}
-<div class="section-title" style="color:#388E3C;border-top-color:#388E3C">Free Faculty (${result.free.length})</div>
+<div class="section-title" style="border-left-color:#2E7D32;color:#2E7D32">FREE Faculty (${result.free.length})</div>
 <table><thead><tr><th>Name</th><th>Department</th></tr></thead>
-<tbody>${freeRows || "<tr><td colspan='2' style='color:#999'>None</td></tr>"}</tbody></table>
-<div class="section-title" style="color:#D32F2F;border-top-color:#D32F2F">Busy Faculty (${result.busy.length})</div>
-<table><thead><tr><th>Name</th><th>Department &amp; Schedule</th></tr></thead>
-<tbody>${busyRows || "<tr><td colspan='2' style='color:#999'>None</td></tr>"}</tbody></table>
+<tbody>${freeByDept || "<tr><td colspan='2' style='color:#999'>None</td></tr>"}</tbody></table>
+<div class="section-title" style="border-left-color:#C62828;color:#C62828;margin-top:12px">BUSY Faculty (${result.busy.length})</div>
+<table><thead><tr><th>Name</th><th>Subject</th><th>Location</th><th>Time</th><th>Type</th></tr></thead>
+<tbody>${busyByDept || "<tr><td colspan='5' style='color:#999'>None</td></tr>"}</tbody></table>
 </body></html>`;
 
     try {
