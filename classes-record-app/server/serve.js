@@ -757,13 +757,22 @@ async function handleApi(method, pathname, req, res) {
       const filterStart = start ? new Date(start + "T00:00:00") : new Date("2026-01-19T00:00:00");
       const filterEnd = end ? new Date(end + "T23:59:59") : new Date();
       filterStart.setHours(0,0,0,0); filterEnd.setHours(23,59,59,999);
+      // Fetch holidays to exclude from TBC count
+      const holidayRows = sidInt
+        ? await db.query("SELECT date::text FROM public.holidays WHERE schedule_id=$1", [sidInt])
+        : await db.query("SELECT date::text FROM public.holidays WHERE schedule_id IS NULL");
+      const holidayDates = new Set(holidayRows.rows.map(h => String(h.date).slice(0,10)));
 
       const DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
       function countWeekday(dayName) {
         const dayIdx = DAY_NAMES.indexOf(dayName);
         if (dayIdx < 0) return 0;
         let d = new Date(filterStart), c = 0;
-        while (d <= filterEnd) { if (d.getDay() === dayIdx) c++; d.setDate(d.getDate()+1); }
+        while (d <= filterEnd) {
+          const iso = d.toISOString().slice(0,10);
+          if (d.getDay() === dayIdx && !holidayDates.has(iso)) c++;
+          d.setDate(d.getDate()+1);
+        }
         return c;
       }
       function normalizeClass(cls, isElective) {
