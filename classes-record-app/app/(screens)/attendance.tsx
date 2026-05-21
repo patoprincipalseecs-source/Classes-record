@@ -16,6 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 import {
   fetchSchedule, fetchStudents, addStudent, deleteStudent,
   markAttendance, fetchRoster, importStudentsExcel,
+  fetchHolidays,
   fetchStudentAttendanceSummary,
   Student, ScheduleRow, StudentAttendanceSummary,
 } from "@/hooks/useApi";
@@ -54,6 +55,7 @@ function generateSemesterDates(
   subject: string,
   startIso: string,
   endIso: string,
+  holidayDates: Set<string> = new Set(),
 ): SemDate[] {
   // Parse as local date to avoid UTC offset shifting the date
   const [sy, sm, sd2] = startIso.slice(0,10).split("-").map(Number);
@@ -89,12 +91,15 @@ function generateSemesterDates(
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth()+1).padStart(2,"0");
       const dd = String(d.getDate()).padStart(2,"0");
-      results.push({
-        date: `${yyyy}-${mm}-${dd}`,
-        type: "regular",
-        dayName: row.Day,
-        time: row.Time,
-      });
+      const dateKey = `${yyyy}-${mm}-${dd}`;
+      if (!holidayDates.has(dateKey)) {
+        results.push({
+          date: dateKey,
+          type: "regular",
+          dayName: row.Day,
+          time: row.Time,
+        });
+      }
       d.setDate(d.getDate() + 7);
     }
   }
@@ -227,13 +232,21 @@ export default function AttendanceScreen() {
     return map;
   }, [classSubjectList]);
 
+  // Fetch holidays for this schedule to exclude from attendance sessions
+  const { data: holidayList = [] } = useQuery({
+    queryKey: ["holidays", scheduleId],
+    queryFn: () => fetchHolidays(scheduleId),
+    enabled: !!scheduleId,
+  });
+  const holidayDateSet = useMemo(() => new Set(holidayList.map((h: any) => String(h.date).slice(0,10))), [holidayList]);
+
   const semesterDates = useMemo(() => {
     if (!selectedClass || !selectedSubject) return [];
     // Strip time component if present (e.g. 2026-05-18T00:00:00.000Z -> 2026-05-18)
     const startStr = effectiveStartDate.slice(0, 10);
     const endStr = effectiveEndDate.slice(0, 10);
-    return generateSemesterDates(scheduleRows, selectedClass, selectedSubject, startStr, endStr);
-  }, [scheduleRows, selectedClass, selectedSubject, effectiveStartDate, effectiveEndDate]);
+    return generateSemesterDates(scheduleRows, selectedClass, selectedSubject, startStr, endStr, holidayDateSet);
+  }, [scheduleRows, selectedClass, selectedSubject, effectiveStartDate, effectiveEndDate, holidayDateSet]);
 
   const { data: students = [], isLoading: studentsLoading } = useQuery({
     queryKey: ["students", scheduleId, selectedClass],
