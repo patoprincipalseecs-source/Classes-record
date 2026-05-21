@@ -1066,11 +1066,11 @@ async function handleApi(method, pathname, req, res) {
           }
           if (!studentId) { failed++; continue; }
           await db.query(
-            `INSERT INTO public.attendance (schedule_id, class_name, student_id, date, session_time, status)
+            `INSERT INTO public.attendance (schedule_id, class_name, roll_no, date, session_time, status)
              VALUES ($1,$2,$3,$4,$5,$6)
-             ON CONFLICT (schedule_id, class_name, student_id, date, session_time)
+             ON CONFLICT (schedule_id, class_name, roll_no, date, session_time)
              DO UPDATE SET status=$6`,
-            [scheduleId, className, studentId, date, sessionTime || "", rec.status]
+            [scheduleId, className, rec.rollNo || String(studentId), date, sessionTime || "", rec.status]
           );
           saved++;
         } catch { failed++; }
@@ -1086,13 +1086,12 @@ async function handleApi(method, pathname, req, res) {
     if (!scheduleId || !className) return json(res, 400, { error: "scheduleId and className required" });
     try {
       const r = await db.query(
-        `SELECT a.id as att_id, a.date, a.session_time, a.status,
-                COALESCE(s.roll_no, '') as roll_no, COALESCE(s.name, '') as name,
-                s.id as student_id
+        `SELECT a.date, a.session_time, a.status, a.roll_no,
+                COALESCE(s.name, '') as name
          FROM public.attendance a
-         LEFT JOIN public.students s ON s.schedule_id=a.schedule_id AND s.class_name=a.class_name AND s.id=a.student_id
+         LEFT JOIN public.students s ON s.schedule_id=a.schedule_id AND s.class_name=a.class_name AND s.roll_no=a.roll_no
          WHERE a.schedule_id=$1 AND a.class_name=$2
-         ORDER BY a.date, a.session_time, s.roll_no`,
+         ORDER BY a.date, a.session_time, a.roll_no`,
         [parseInt(scheduleId), className]
       );
       // Also return students list for this class
@@ -1515,12 +1514,16 @@ async function fixSequences() {
       id SERIAL PRIMARY KEY,
       schedule_id INTEGER REFERENCES public.schedules(id) ON DELETE CASCADE,
       class_name TEXT NOT NULL,
-      student_id INTEGER REFERENCES public.students(id) ON DELETE CASCADE,
+      roll_no TEXT NOT NULL DEFAULT '',
       date DATE NOT NULL,
       session_time TEXT DEFAULT '',
       status TEXT NOT NULL DEFAULT 'P',
-      UNIQUE(schedule_id, class_name, student_id, date, session_time)
+      UNIQUE(schedule_id, class_name, roll_no, date, session_time)
     )`);
+    // Add roll_no column if missing (migration)
+    await db.query("ALTER TABLE public.attendance ADD COLUMN IF NOT EXISTS roll_no TEXT NOT NULL DEFAULT ''");
+    // Drop student_id constraint if exists
+    try { await db.query("ALTER TABLE public.attendance DROP COLUMN IF EXISTS student_id"); } catch {}
     console.log("\u2713 Attendance tables ensured");
   } catch(e) { console.log("Attendance table warning:", e.message); }
 
