@@ -1527,6 +1527,69 @@ async function handleApi(method, pathname, req, res) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  // GET /api/student-portal/attendance
+  if (method === "GET" && pathname === "/api/student-portal/attendance") {
+    const scheduleId = reqUrl.searchParams.get("scheduleId");
+    const rollNo = reqUrl.searchParams.get("rollNo");
+    const className = reqUrl.searchParams.get("className");
+    if (!scheduleId || !rollNo) return json(res, 400, { error: "scheduleId and rollNo required" });
+    try {
+      // Get all subjects for this student's class
+      const subjects = await db.query(
+        "SELECT DISTINCT subject, class_name FROM public.weekly_schedule WHERE schedule_id=$1 AND class_name=$2 AND (type IS NULL OR type='') ORDER BY subject",
+        [parseInt(scheduleId), className]
+      );
+      const result = [];
+      for (const subj of subjects.rows) {
+        const att = await db.query(
+          "SELECT status, COUNT(*) as cnt FROM public.attendance WHERE schedule_id=$1 AND class_name=$2 AND roll_no=$3 GROUP BY status",
+          [parseInt(scheduleId), subj.class_name, rollNo]
+        );
+        const counts = { present: 0, absent: 0, late: 0, total: 0 };
+        for (const r of att.rows) {
+          const s = (r.status || "P").toUpperCase();
+          const n = parseInt(r.cnt);
+          if (s === "P") counts.present += n;
+          else if (s === "A") counts.absent += n;
+          else if (s === "L") counts.late += n;
+          counts.total += n;
+        }
+        if (counts.total > 0) result.push({ subject: subj.subject, className: subj.class_name, ...counts });
+      }
+      return json(res, 200, result);
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  // GET /api/student-portal/marks
+  if (method === "GET" && pathname === "/api/student-portal/marks") {
+    const scheduleId = reqUrl.searchParams.get("scheduleId");
+    const rollNo = reqUrl.searchParams.get("rollNo");
+    const className = reqUrl.searchParams.get("className");
+    if (!scheduleId || !rollNo) return json(res, 400, { error: "required" });
+    try {
+      const r = await db.query(
+        `SELECT em.subject, em.class_name, em.quiz_marks, em.quiz_total,
+                em.mid_marks, em.mid_total, em.final_marks, em.final_total
+         FROM public.exam_marks em
+         WHERE em.schedule_id=$1 AND em.class_name=$2 AND em.roll_no=$3
+         ORDER BY em.subject`,
+        [parseInt(scheduleId), className, rollNo]
+      );
+      const result = r.rows.map((row: any) => {
+        const quiz = row.quiz_marks != null ? parseFloat(row.quiz_marks) : null;
+        const mid = row.mid_marks != null ? parseFloat(row.mid_marks) : null;
+        const fin = row.final_marks != null ? parseFloat(row.final_marks) : null;
+        const quizT = parseFloat(row.quiz_total) || 0;
+        const midT = parseFloat(row.mid_total) || 0;
+        const finT = parseFloat(row.final_total) || 0;
+        const totalScore = (quiz||0) + (mid||0) + (fin||0);
+        const grandTotal = quizT + midT + finT;
+        return { subject: row.subject, className: row.class_name, quiz, quizTotal: quizT, mid, midTotal: midT, final: fin, finalTotal: finT, totalScore: grandTotal > 0 ? totalScore : null, grandTotal: grandTotal > 0 ? grandTotal : null };
+      });
+      return json(res, 200, result);
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   // POST /api/student-portal/change-password
   if (method === "POST" && pathname === "/api/student-portal/change-password") {
     const { username, currentPassword, newPassword } = body;
