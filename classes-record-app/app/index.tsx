@@ -16,6 +16,7 @@ import { fetchPublicSchedules } from "@/hooks/useApi";
 const TILES = [
   { route: "/(screens)/my-schedules",  emoji: "🔒", title: "My Schedules",         subtitle: "Schedule · Attendance · Summary", color: "#AD1457", bg: "#FCE4EC" },
   { route: "/(screens)/faculty-portal",emoji: "👤", title: "Faculty Sign In",      subtitle: "Attendance · Exam marks",     color: "#00695C", bg: "#E0F2F1" },
+  { route: "/(screens)/student-portal", emoji: "🎓", title: "Student Sign In",      subtitle: "Attendance · Marks · Profile", color: "#1565C0", bg: "#E3F2FD" },
   { route: "/(screens)/finance",       emoji: "💰", title: "Account & Finance",    subtitle: "Fees · Salary · Payments",    color: "#F57F17", bg: "#FFFDE7" },
   { route: "/(screens)/admin-panel",   emoji: "🛡️", title: "Admin Panel",          subtitle: "Users · Passwords · CSV",     color: "#4A148C", bg: "#EDE7F6" },
   { route: "/(screens)/tutorial",      emoji: "📖", title: "Tutorial",             subtitle: "Guide · Examples · PDF",      color: "#283593", bg: "#E8EAF6" },

@@ -580,6 +580,54 @@ export async function deleteFacultyAccount(id: number) {
   return res.json();
 }
 
+// ── Student Account API ──────────────────────────────────
+export interface StudentAccount {
+  id: number;
+  scheduleId: number;
+  studentName: string;
+  rollNo: string;
+  username: string;
+  password: string;
+  className: string;
+  email: string;
+  createdAt: string;
+}
+export async function fetchStudentAccounts(scheduleId: number): Promise<StudentAccount[]> {
+  try {
+    const res = await fetch(`${API_BASE}/student-access?scheduleId=${scheduleId}`);
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
+}
+export async function generateStudentAccounts(scheduleId: number, className?: string) {
+  const res = await fetch(`${API_BASE}/student-access/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scheduleId, className }),
+  });
+  return res.json();
+}
+export async function updateStudentAccount(id: number, data: { email?: string; regenerate?: boolean }) {
+  const res = await fetch(`${API_BASE}/student-access/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+export async function deleteStudentAccount(id: number) {
+  const res = await fetch(`${API_BASE}/student-access/${id}`, { method: "DELETE" });
+  return res.json();
+}
+export async function studentPortalLogin(username: string, password: string) {
+  const res = await fetch(`${API_BASE}/student-portal/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+  return res.json();
+}
+
 export async function importStudentsExcel(scheduleId: number, className: string, uri: string, name: string, mimeType: string, file?: File) {
   const isCSV = name?.toLowerCase().endsWith(".csv") || mimeType === "text/csv" || mimeType === "text/plain";
   if (isCSV && file) {

@@ -27,6 +27,44 @@ export default function FacultyPortalScreen() {
 
   const [session, setSession] = useState<FacultySession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const PHOTO_KEY = "FACULTY_PORTAL_PHOTO_";
+
+  React.useEffect(() => {
+    if (session?.username && typeof window !== "undefined") {
+      const p = localStorage.getItem(PHOTO_KEY + session.username);
+      if (p) setPhotoUri(p);
+    }
+  }, [session?.username]);
+
+  function handlePhotoChange() {
+    if (typeof window === "undefined" || !session) return;
+    const input = document.createElement("input");
+    input.type = "file"; input.accept = "image/*";
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 1024 * 1024) { window.alert("Photo must be less than 1 MB"); return; }
+      const reader = new FileReader();
+      reader.onload = (ev: any) => {
+        const img = document.createElement("img");
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX = 300; let w = img.width, h = img.height;
+          if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+          if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+          const compressed = canvas.toDataURL("image/jpeg", 0.7);
+          setPhotoUri(compressed);
+          localStorage.setItem(PHOTO_KEY + session.username, compressed);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  }
   const [schedDates, setSchedDates] = useState<{startDate:string,endDate:string}|null>(null);
 
   // Fetch schedule dates from server when session lacks them (hooks must be at top level)
@@ -266,8 +304,20 @@ export default function FacultyPortalScreen() {
               <Text style={s.signOutTxt}>Sign Out</Text>
             </TouchableOpacity>
           </View>
-          <Text style={s.headerTitle}>{session.facultyName}</Text>
-          <Text style={s.headerSub}>{session.scheduleTitle}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 4 }}>
+            <TouchableOpacity onPress={handlePhotoChange} style={{ position: "relative" }}>
+              <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: "rgba(255,255,255,0.25)", alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden" }}>
+                {photoUri ? <Image source={{ uri: photoUri }} style={{ width: 56, height: 56, borderRadius: 28 }} /> : <Feather name="user" size={24} color="rgba(255,255,255,0.8)" />}
+              </View>
+              <View style={{ position: "absolute", bottom: 0, right: 0, backgroundColor: "#1565C0", borderRadius: 10, padding: 3, borderWidth: 1, borderColor: "#fff" }}>
+                <Feather name="camera" size={9} color="#fff" />
+              </View>
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={s.headerTitle}>{session.facultyName}</Text>
+              <Text style={s.headerSub}>{session.scheduleTitle}</Text>
+            </View>
+          </View>
           <View style={s.headerBadge}>
             <Feather name="user" size={12} color="#fff" />
             <Text style={s.headerBadgeTxt}>Logged in as {session.username}</Text>

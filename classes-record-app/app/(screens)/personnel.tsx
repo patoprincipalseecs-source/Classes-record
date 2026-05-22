@@ -149,7 +149,7 @@ export default function PersonnelScreen() {
     personRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
   });
 
-  const tabLabels: Record<PersonType, string> = { faculty: "Faculty", student: "Student", staff: "Staff", roster: "Students", access: "Faculty Access" };
+  const tabLabels: Record<PersonType, string> = { faculty: "Faculty", student: "Student", staff: "Staff", roster: "Students", access: "Faculty Access", studentAccess: "Student Access" };
 
   return (
     <View style={s.container}>
@@ -179,6 +179,9 @@ export default function PersonnelScreen() {
         <TouchableOpacity style={[s.tab, activeTab==="access" && { borderColor:"#00695C", backgroundColor:"#00695C" }]}
           onPress={() => { setActiveTab("access"); setMsg(""); }}>
           <Text style={[s.tabTxt, activeTab==="access" && s.tabTxtActive]}>🔑 Faculty Access</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.tab, activeTab==="studentAccess" && s.tabActive]} onPress={() => setActiveTab("studentAccess" as any)}>
+          <Text style={[s.tabTxt, activeTab==="studentAccess" && s.tabTxtActive]}>🎓 Student Access</Text>
         </TouchableOpacity>
       </View>
 
@@ -212,9 +215,25 @@ export default function PersonnelScreen() {
               onPress={() => router.push(`/(screens)/faculty-credentials?scheduleId=${scheduleId}&scheduleTitle=${encodeURIComponent(decodeURIComponent(scheduleTitle ?? ""))}` as never)}>
               <Text style={{ color: "#fff", fontFamily: "Inter_700Bold", fontSize: 15 }}>Open Faculty Access →</Text>
             </TouchableOpacity>
-            <Text style={{ paddingHorizontal:14, paddingBottom:14, fontSize:13, fontFamily:"Inter_400Regular", color:colors.mutedForeground }}>
-              Manage faculty login credentials, share schedule access, download faculty reports.
-            </Text>
+            <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: colors.mutedForeground, marginTop: 8, marginHorizontal: 14, marginBottom: 14 }}>Manage faculty login credentials, share schedule access, download faculty reports.</Text>
+          </View>
+        )}
+        {activeTab === "studentAccess" && (
+          <View style={{ padding: 16 }}>
+            <View style={{ backgroundColor: colors.card, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <Feather name="users" size={20} color="#1565C0" />
+                <Text style={{ fontFamily: "Inter_700Bold", fontSize: 16, color: "#1565C0" }}>Student Access & Credentials</Text>
+              </View>
+              <TouchableOpacity
+                style={{ backgroundColor: "#1565C0", borderRadius: 10, paddingVertical: 14, alignItems: "center", marginBottom: 10 }}
+                onPress={() => router.push(`/(screens)/student-credentials?scheduleId=${scheduleId}&scheduleTitle=${encodeURIComponent(decodeURIComponent(scheduleTitle ?? ""))}` as never)}>
+                <Text style={{ color: "#fff", fontFamily: "Inter_700Bold", fontSize: 15 }}>Open Student Access →</Text>
+              </TouchableOpacity>
+              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>
+                Manage student login credentials and share schedule access with students.
+              </Text>
+            </View>
           </View>
         )}
 
