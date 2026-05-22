@@ -1575,7 +1575,7 @@ async function handleApi(method, pathname, req, res) {
          ORDER BY em.subject`,
         [parseInt(scheduleId), className, rollNo]
       );
-      const result = r.rows.map((row: any) => {
+      const result = r.rows.map((row) => {
         const quiz = row.quiz_marks != null ? parseFloat(row.quiz_marks) : null;
         const mid = row.mid_marks != null ? parseFloat(row.mid_marks) : null;
         const fin = row.final_marks != null ? parseFloat(row.final_marks) : null;
