@@ -117,6 +117,9 @@ export default function FinanceScreen() {
   const [newDept, setNewDept] = useState("");
   const [addingStaff, setAddingStaff] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [studentClassFilter, setStudentClassFilter] = useState<string>("All");
+  const [studentSearch, setStudentSearch] = useState<string>("");
+  const [savingRowId, setSavingRowId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SupportStaff | null>(null);
 
   // ── Rates modal ────────────────────────────────────────────────────────
@@ -959,7 +962,177 @@ export default function FinanceScreen() {
       {activeTab === "students" && (
         <View style={{ flex: 1 }}>
           {renderRatesBar("student")}
-          {renderPayTable(studentRows, "student")}
+          {/* Class filter + student search */}
+          {studentRows.length > 0 && (() => {
+            const allClasses = ["All", ...Array.from(new Set(studentRows.map(r => {
+              const parts = r.personId.split("-");
+              return parts.length >= 3 ? parts.slice(0, 3).join("-") : r.personId;
+            }))).sort()];
+            const filteredRows = studentRows.filter(r => {
+              const cls = (() => { const p = r.personId.split("-"); return p.length >= 3 ? p.slice(0, 3).join("-") : r.personId; })();
+              const matchClass = studentClassFilter === "All" || cls === studentClassFilter;
+              const matchSearch = !studentSearch.trim() ||
+                r.personName.toLowerCase().includes(studentSearch.toLowerCase()) ||
+                r.personId.toLowerCase().includes(studentSearch.toLowerCase());
+              return matchClass && matchSearch;
+            });
+            return (
+              <View style={{ backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                {/* Class filter chips */}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 6, gap: 6 }}>
+                  {allClasses.map(cls => (
+                    <TouchableOpacity key={cls}
+                      style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 16, backgroundColor: studentClassFilter === cls ? "#1565C0" : colors.muted, borderWidth: 1, borderColor: studentClassFilter === cls ? "#1565C0" : colors.border, marginRight: 6 }}
+                      onPress={() => { setStudentClassFilter(cls); setStudentSearch(""); }}>
+                      <Text style={{ fontSize: 12, fontFamily: "Inter_600SemiBold", color: studentClassFilter === cls ? "#fff" : colors.foreground }}>{cls}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+                {/* Student search */}
+                <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 10, marginBottom: 8, backgroundColor: colors.muted, borderRadius: 10, paddingHorizontal: 10, borderWidth: 1, borderColor: colors.border }}>
+                  <Feather name="search" size={14} color={colors.mutedForeground} />
+                  <TextInput
+                    style={{ flex: 1, paddingVertical: 7, paddingHorizontal: 8, fontFamily: "Inter_400Regular", fontSize: 13, color: colors.foreground }}
+                    placeholder="Search student name or roll no..."
+                    placeholderTextColor={colors.mutedForeground}
+                    value={studentSearch}
+                    onChangeText={setStudentSearch}
+                  />
+                  {studentSearch ? <TouchableOpacity onPress={() => setStudentSearch("")}><Feather name="x" size={14} color={colors.mutedForeground} /></TouchableOpacity> : null}
+                </View>
+                {/* Summary bar */}
+                <View style={{ flexDirection: "row", paddingHorizontal: 10, paddingBottom: 6, gap: 12 }}>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>{filteredRows.length} students</Text>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_600SemiBold", color: "#2E7D32" }}>
+                    Paid: {filteredRows.filter(r => payStatus(r.amount, r.paidAmount) === "Paid").length}
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_600SemiBold", color: "#C62828" }}>
+                    Unpaid: {filteredRows.filter(r => payStatus(r.amount, r.paidAmount) === "Unpaid").length}
+                  </Text>
+                </View>
+              </View>
+            );
+          })()}
+          {/* Individual student payment cards */}
+          <ScrollView contentContainerStyle={{ paddingBottom: 80, paddingTop: 4 }}>
+            {(() => {
+              const filteredRows = studentRows.filter(r => {
+                const cls = (() => { const p = r.personId.split("-"); return p.length >= 3 ? p.slice(0, 3).join("-") : r.personId; })();
+                const matchClass = studentClassFilter === "All" || cls === studentClassFilter;
+                const matchSearch = !studentSearch.trim() ||
+                  r.personName.toLowerCase().includes(studentSearch.toLowerCase()) ||
+                  r.personId.toLowerCase().includes(studentSearch.toLowerCase());
+                return matchClass && matchSearch;
+              });
+              if (filteredRows.length === 0) return (
+                <View style={{ alignItems: "center", marginTop: 40 }}>
+                  <Feather name="users" size={40} color={colors.mutedForeground} />
+                  <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", marginTop: 12 }}>
+                    {studentRows.length === 0 ? "No students found for this schedule." : "No students match your filter."}
+                  </Text>
+                </View>
+              );
+              return filteredRows.map((row, i) => {
+                const balance = Number(row.amount) - Number(row.paidAmount);
+                const status = payStatus(row.amount, row.paidAmount);
+                const isSaving = savingRowId === row.personId;
+                const isPaid = status === "Paid";
+                return (
+                  <View key={row.personId} style={{ marginHorizontal: 10, marginBottom: 8, backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: isPaid ? "#C8E6C9" : colors.border, padding: 12 }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontFamily: "Inter_700Bold", fontSize: 14, color: colors.foreground }}>{row.personName}</Text>
+                        <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: colors.mutedForeground }}>{row.personId}</Text>
+                      </View>
+                      <View style={{ backgroundColor: STATUS_BG[status], borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 }}>
+                        <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 11, color: STATUS_COLOR[status] }}>{status}</Text>
+                      </View>
+                    </View>
+                    <View style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 3 }}>Fee Due (Rs)</Text>
+                        <TextInput
+                          style={{ backgroundColor: colors.muted, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7, fontFamily: "Inter_400Regular", fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: "#00695C33" }}
+                          value={row.amount}
+                          onChangeText={v => updateRow("student", studentRows.indexOf(row), "amount", v.replace(/[^0-9.]/g, ""))}
+                          keyboardType="numeric"
+                          maxLength={8}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 3 }}>Amount Paid (Rs)</Text>
+                        <TextInput
+                          style={{ backgroundColor: colors.muted, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7, fontFamily: "Inter_400Regular", fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: "#2E7D3233" }}
+                          value={row.paidAmount}
+                          onChangeText={v => updateRow("student", studentRows.indexOf(row), "paidAmount", v.replace(/[^0-9.]/g, ""))}
+                          keyboardType="numeric"
+                          maxLength={8}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 3 }}>Balance</Text>
+                        <View style={{ backgroundColor: colors.muted, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: colors.border }}>
+                          <Text style={{ fontFamily: "Inter_700Bold", fontSize: 14, color: balance > 0 ? "#C62828" : "#9E9E9E" }}>
+                            {balance > 0 ? `Rs ${fmt(balance)}` : "–"}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <TouchableOpacity
+                        style={{ flex: 1, backgroundColor: isPaid ? "#9E9E9E" : "#2E7D32", borderRadius: 8, paddingVertical: 10, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 6, opacity: isSaving ? 0.7 : 1 }}
+                        disabled={isSaving}
+                        onPress={async () => {
+                          const rowIdx = studentRows.indexOf(row);
+                          const fullPay = row.amount;
+                          updateRow("student", rowIdx, "paidAmount", fullPay);
+                          setSavingRowId(row.personId);
+                          try {
+                            await saveFinancePaymentsBulk([{
+                              personType: "student",
+                              personName: row.personName,
+                              personId: row.personId,
+                              scheduleId: selectedScheduleId,
+                              period,
+                              amount: Number(fullPay) || 0,
+                              paidAmount: Number(fullPay) || 0,
+                              status: "Paid",
+                              note: row.notes,
+                            }]);
+                            await loadPayRows("student", setStudentRows, period);
+                          } finally { setSavingRowId(null); }
+                        }}>
+                        {isSaving ? <ActivityIndicator color="#fff" size="small" /> : <><Feather name="check-circle" size={14} color="#fff" /><Text style={{ color: "#fff", fontFamily: "Inter_700Bold", fontSize: 13 }}>{isPaid ? "Paid ✓" : "Mark Paid"}</Text></>}
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{ flex: 1, backgroundColor: "#1565C0", borderRadius: 8, paddingVertical: 10, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 6, opacity: isSaving ? 0.7 : 1 }}
+                        disabled={isSaving}
+                        onPress={async () => {
+                          const rowIdx = studentRows.indexOf(row);
+                          setSavingRowId(row.personId);
+                          try {
+                            await saveFinancePaymentsBulk([{
+                              personType: "student",
+                              personName: row.personName,
+                              personId: row.personId,
+                              scheduleId: selectedScheduleId,
+                              period,
+                              amount: Number(row.amount) || 0,
+                              paidAmount: Number(row.paidAmount) || 0,
+                              status: payStatus(row.amount, row.paidAmount),
+                              note: row.notes,
+                            }]);
+                            await loadPayRows("student", setStudentRows, period);
+                          } finally { setSavingRowId(null); }
+                        }}>
+                        {isSaving ? <ActivityIndicator color="#fff" size="small" /> : <><Feather name="save" size={14} color="#fff" /><Text style={{ color: "#fff", fontFamily: "Inter_700Bold", fontSize: 13 }}>Save</Text></>}
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              });
+            })()}
+          </ScrollView>
         </View>
       )}
       {activeTab === "faculty" && (

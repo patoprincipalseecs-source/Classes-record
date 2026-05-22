@@ -196,7 +196,7 @@ async function handleApi(method, pathname, req, res) {
     if (!scheduleId || !personType || !period) return json(res, 200, []);
     try {
       const r = await db.query(
-        "SELECT id, person_type, person_name, schedule_id, period, amount, status, note FROM public.finance_payments WHERE schedule_id=$1 AND person_type=$2 AND period=$3 ORDER BY person_name",
+        "SELECT id, person_type, person_name, schedule_id, period, amount, COALESCE(paid_amount,0) as paid_amount, status, note FROM public.finance_payments WHERE schedule_id=$1 AND person_type=$2 AND period=$3 ORDER BY person_name",
         [parseInt(scheduleId), personType, period]
       );
       return json(res, 200, r.rows.map(p => ({ id: p.id, personType: p.person_type, personName: p.person_name, scheduleId: p.schedule_id, period: p.period, amount: parseFloat(p.amount)||0, status: p.status, note: p.note||"" })));
@@ -373,11 +373,11 @@ async function handleApi(method, pathname, req, res) {
     try {
       for (const p of payments) {
         await db.query(
-          `INSERT INTO public.finance_payments (person_type, person_name, schedule_id, period, amount, status, note)
-           VALUES ($1,$2,$3,$4,$5,$6,$7)
+          `INSERT INTO public.finance_payments (person_type, person_name, schedule_id, period, amount, paid_amount, status, note)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
            ON CONFLICT (person_type, person_name, schedule_id, period)
-           DO UPDATE SET amount=$5, status=$6, note=$7`,
-          [p.personType, p.personName, p.scheduleId, p.period, p.amount||0, p.status||"Unpaid", p.note||""]
+           DO UPDATE SET amount=$5, paid_amount=$6, status=$7, note=$8`,
+          [p.personType, p.personName, p.scheduleId, p.period, p.amount||0, p.paidAmount||0, p.status||"Unpaid", p.note||""]
         );
       }
       return json(res, 200, { success: true });
@@ -455,7 +455,7 @@ async function handleApi(method, pathname, req, res) {
     if (!regNo) return json(res, 200, null);
     try {
       const r = await db.query(
-        "SELECT fp.*, s.name as student_name FROM public.finance_payments fp LEFT JOIN public.students s ON s.roll_no=fp.person_name WHERE fp.person_type='student' AND fp.person_name=$1 ORDER BY fp.period DESC LIMIT 12",
+        "SELECT fp.id, fp.period, fp.amount, COALESCE(fp.paid_amount,0) as paid_amount, fp.status, fp.note, s.name as student_name FROM public.finance_payments fp LEFT JOIN public.students s ON s.roll_no=fp.person_name WHERE fp.person_type='student' AND fp.person_name=$1 ORDER BY fp.period DESC LIMIT 12",
         [regNo]
       );
       return json(res, 200, r.rows.length ? { regNo, name: r.rows[0].student_name||regNo, payments: r.rows } : null);
@@ -1802,6 +1802,7 @@ async function fixSequences() {
       schedule_id INTEGER REFERENCES public.schedules(id) ON DELETE CASCADE,
       period TEXT NOT NULL,
       amount NUMERIC(12,2) DEFAULT 0,
+      paid_amount NUMERIC(12,2) DEFAULT 0,
       status TEXT DEFAULT 'Unpaid',
       note TEXT DEFAULT '',
       UNIQUE(person_type, person_name, schedule_id, period)

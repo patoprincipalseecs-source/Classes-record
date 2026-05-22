@@ -397,11 +397,14 @@ export interface FinancePayment {
   id?: number;
   personType: string;
   personName: string;
+  personId?: string;
   scheduleId?: number;
   period: string;
   amount: number;
+  paidAmount?: number;
   status: string;
   note?: string;
+  notes?: string;
 }
 
 export interface SupportStaff {
