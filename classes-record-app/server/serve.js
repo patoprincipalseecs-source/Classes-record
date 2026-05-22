@@ -1416,6 +1416,129 @@ async function handleApi(method, pathname, req, res) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  // ── STUDENT ACCESS ENDPOINTS ──────────────────────────────
+  // GET /api/student-access
+  if (method === "GET" && pathname === "/api/student-access") {
+    const scheduleId = reqUrl.searchParams.get("scheduleId");
+    if (!scheduleId) return json(res, 400, { error: "scheduleId required" });
+    try {
+      const r = await db.query(
+        `SELECT sa.id, sa.schedule_id, sa.student_name, sa.roll_no, sa.username,
+                sa.password, sa.class_name, sa.email, sa.created_at
+         FROM public.student_accounts sa
+         WHERE sa.schedule_id=$1 ORDER BY sa.class_name, sa.student_name`,
+        [parseInt(scheduleId)]
+      );
+      return json(res, 200, r.rows.map(s => ({
+        id: s.id, scheduleId: s.schedule_id, studentName: s.student_name,
+        rollNo: s.roll_no, username: s.username, password: s.password,
+        className: s.class_name, email: s.email, createdAt: s.created_at
+      })));
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  // POST /api/student-access/generate
+  if (method === "POST" && pathname === "/api/student-access/generate") {
+    const { scheduleId, className } = body;
+    if (!scheduleId) return json(res, 400, { error: "scheduleId required" });
+    try {
+      // Ensure student_accounts table exists
+      await db.query(`CREATE TABLE IF NOT EXISTS public.student_accounts (
+        id SERIAL PRIMARY KEY,
+        schedule_id INTEGER REFERENCES public.schedules(id) ON DELETE CASCADE,
+        student_name TEXT NOT NULL,
+        roll_no TEXT NOT NULL DEFAULT '',
+        class_name TEXT NOT NULL DEFAULT '',
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        email TEXT NOT NULL DEFAULT '',
+        created_at TIMESTAMP DEFAULT now(),
+        UNIQUE(schedule_id, roll_no)
+      )`);
+      // Get all students for this schedule (optionally filtered by class)
+      const studQuery = className
+        ? await db.query("SELECT id, name, roll_no, class_name, email FROM public.students WHERE schedule_id=$1 AND class_name=$2 ORDER BY class_name, roll_no", [parseInt(scheduleId), className])
+        : await db.query("SELECT id, name, roll_no, class_name, email FROM public.students WHERE schedule_id=$1 ORDER BY class_name, roll_no", [parseInt(scheduleId)]);
+      let created = 0, skipped = 0;
+      for (const s of studQuery.rows) {
+        const existing = await db.query("SELECT id FROM public.student_accounts WHERE schedule_id=$1 AND roll_no=$2", [parseInt(scheduleId), s.roll_no]);
+        if (existing.rows.length) { skipped++; continue; }
+        // Generate username from roll_no (e.g. 2K22-EE-01 → 2k22ee01) + random suffix
+        const base = (s.roll_no || s.name || "student").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10);
+        const username = base + Math.floor(100 + Math.random() * 900);
+        const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+        const password = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+        try {
+          await db.query(
+            "INSERT INTO public.student_accounts (schedule_id, student_name, roll_no, class_name, username, password, email) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (schedule_id, roll_no) DO NOTHING",
+            [parseInt(scheduleId), s.name, s.roll_no, s.class_name, username, password, s.email || ""]
+          );
+          created++;
+        } catch { skipped++; }
+      }
+      return json(res, 200, { success: true, created, skipped });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  // PATCH /api/student-access/:id
+  if (method === "PATCH" && pathname.match(/^\/api\/student-access\/\d+$/)) {
+    const id = parseInt(pathname.split("/")[3]);
+    const { email, regenerate } = body;
+    try {
+      if (regenerate) {
+        const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+        const password = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+        await db.query("UPDATE public.student_accounts SET password=$1 WHERE id=$2", [password, id]);
+      }
+      if (email !== undefined) await db.query("UPDATE public.student_accounts SET email=$1 WHERE id=$2", [email, id]);
+      return json(res, 200, { success: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  // DELETE /api/student-access/:id
+  if (method === "DELETE" && pathname.match(/^\/api\/student-access\/\d+$/)) {
+    const id = parseInt(pathname.split("/")[3]);
+    try {
+      await db.query("DELETE FROM public.student_accounts WHERE id=$1", [id]);
+      return json(res, 200, { success: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  // POST /api/student-portal/login
+  if (method === "POST" && pathname === "/api/student-portal/login") {
+    const { username, password } = body;
+    if (!username || !password) return json(res, 400, { success: false, message: "Username and password required" });
+    try {
+      const r = await db.query(
+        `SELECT sa.*, s.name as schedule_name FROM public.student_accounts sa
+         LEFT JOIN public.schedules s ON s.id = sa.schedule_id
+         WHERE sa.username=$1 LIMIT 1`,
+        [username.trim()]
+      );
+      if (!r.rows.length) return json(res, 200, { success: false, message: "Username not found" });
+      const acc = r.rows[0];
+      if (acc.password !== password.trim()) return json(res, 200, { success: false, message: "Incorrect password" });
+      return json(res, 200, {
+        success: true,
+        studentName: acc.student_name, rollNo: acc.roll_no,
+        className: acc.class_name, scheduleId: acc.schedule_id,
+        scheduleName: acc.schedule_name, username: acc.username
+      });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  // POST /api/student-portal/change-password
+  if (method === "POST" && pathname === "/api/student-portal/change-password") {
+    const { username, currentPassword, newPassword } = body;
+    try {
+      const r = await db.query("SELECT id, password FROM public.student_accounts WHERE username=$1 LIMIT 1", [username]);
+      if (!r.rows.length) return json(res, 404, { success: false, message: "Account not found" });
+      if (r.rows[0].password !== currentPassword) return json(res, 200, { success: false, message: "Current password incorrect" });
+      await db.query("UPDATE public.student_accounts SET password=$1 WHERE username=$2", [newPassword, username]);
+      return json(res, 200, { success: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   // POST /api/fix-sortkeys — fix bad sort_key values
   if (method === "POST" && pathname === "/api/fix-sortkeys") {
     const { scheduleId } = body;
