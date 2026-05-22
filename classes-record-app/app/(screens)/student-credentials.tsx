@@ -231,7 +231,7 @@ export default function StudentCredentialsScreen() {
 
         <TouchableOpacity
           style={[s.toolBtn, { backgroundColor: "#E3F2FD", borderColor: "#1565C0" }]}
-          onPress={() => Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/faculty-access/download?scheduleId=${scheduleId}`)}
+          onPress={() => Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/student-access/download?scheduleId=${scheduleId}`)}
           disabled={accounts.length === 0}
         >
           <Feather name="download" size={16} color="#1565C0" />

@@ -1480,6 +1480,29 @@ async function handleApi(method, pathname, req, res) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  // GET /api/student-access/download
+  if (method === "GET" && pathname === "/api/student-access/download") {
+    const scheduleId = reqUrl.searchParams.get("scheduleId");
+    if (!scheduleId) return json(res, 400, { error: "scheduleId required" });
+    try {
+      const r = await db.query(
+        "SELECT student_name, roll_no, class_name, username, password, email FROM public.student_accounts WHERE schedule_id=$1 ORDER BY class_name, student_name",
+        [parseInt(scheduleId)]
+      );
+      let csv = "Student Name,Roll No,Class,Username,Password,Email\n";
+      for (const row of r.rows) {
+        csv += `"${row.student_name}","${row.roll_no}","${row.class_name}","${row.username}","${row.password}","${row.email||""}"\n`;
+      }
+      res.writeHead(200, {
+        "Content-Type": "text/csv",
+        "Content-Disposition": `attachment; filename="student-credentials-${scheduleId}.csv"`,
+        "Access-Control-Allow-Origin": "*",
+      });
+      res.end(csv);
+      return;
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   // PATCH /api/student-access/:id
   if (method === "PATCH" && pathname.match(/^\/api\/student-access\/\d+$/)) {
     const id = parseInt(pathname.split("/")[3]);
