@@ -211,9 +211,29 @@ async function handleApi(method, pathname, req, res) {
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const buffer = Buffer.concat(chunks);
-      // Parse CSV content
-      const text = buffer.toString("utf-8");
-      const lines = text.split(/?
+      // Extract CSV from multipart or raw
+      let text = "";
+      const ct = req.headers["content-type"] || "";
+      if (ct.includes("multipart/form-data")) {
+        const boundary = ct.split("boundary=")[1]?.trim();
+        if (boundary) {
+          const raw = buffer.toString("binary");
+          const parts = raw.split("--" + boundary);
+          for (const part of parts) {
+            if (part.includes("filename=") || part.includes("name=")) {
+              const bodyStart = part.indexOf("\r\n\r\n");
+              if (bodyStart !== -1) {
+                text = part.slice(bodyStart + 4).replace(/\r\n--.*$/s, "").trim();
+                break;
+              }
+            }
+          }
+        }
+      } else {
+        text = buffer.toString("utf-8");
+      }
+      const lines = text.split(/
+?
 /).filter(l => l.trim());
       if (lines.length < 2) return json(res, 400, { error: "Empty file" });
       const header = lines[0].split(",").map(h => h.replace(/"/g, "").trim().toLowerCase());
