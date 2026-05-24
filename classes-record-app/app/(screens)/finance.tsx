@@ -357,7 +357,7 @@ export default function FinanceScreen() {
       const asset = result.assets[0];
       setRatesBulkLoading(true);
       const schId = type !== "staff" ? selectedScheduleId : null;
-      const res = await importRatesExcel(asset.uri, asset.name, asset.mimeType ?? "application/octet-stream", type, schId);
+      const res = await importRatesExcel(asset.uri, asset.name, asset.mimeType ?? "application/octet-stream", schId ?? 0, type);
       setRatesBulkLoading(false);
       if (res.success) {
         Alert.alert("Rates Imported", `${res.saved ?? 0} rate(s) saved, ${res.skipped ?? 0} skipped.`);

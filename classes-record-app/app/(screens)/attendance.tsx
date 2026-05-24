@@ -384,7 +384,12 @@ export default function AttendanceScreen() {
     const dateCols = dates.map(d => `<th>${fmtSlotHtml(d)}</th>`).join("");
     const dataRows = rows.map((r, i) => {
       const bg = i % 2 === 0 ? "#fff" : "#F9FAFB";
-      const pct = r.percentage;
+      const vals = Object.values(r.records ?? {}) as string[];
+      const presentCount = vals.filter(v => v === 'P').length;
+      const absentCount  = vals.filter(v => v === 'A').length;
+      const leaveCount   = vals.filter(v => v === 'L').length;
+      const total = presentCount + absentCount + leaveCount;
+      const pct = total > 0 ? Math.round((presentCount / total) * 100) : 0;
       const pctColor = pct >= 75 ? "#2E7D32" : pct >= 60 ? "#E65100" : "#C62828";
       const cells = dates.map(d => {
         const st = r.records[d] ?? "";

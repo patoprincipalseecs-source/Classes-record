@@ -203,6 +203,47 @@ async function handleApi(method, pathname, req, res) {
     } catch(e) { return json(res, 200, []); }
   }
 
+  // POST /api/finance/rates/import - bulk upload rates from CSV/Excel
+  if (method === "POST" && pathname === "/api/finance/rates/import") {
+    const scheduleId = reqUrl.searchParams.get("scheduleId");
+    const personType = reqUrl.searchParams.get("personType");
+    try {
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      const buffer = Buffer.concat(chunks);
+      // Parse CSV content
+      const text = buffer.toString("utf-8");
+      const lines = text.split(/?
+/).filter(l => l.trim());
+      if (lines.length < 2) return json(res, 400, { error: "Empty file" });
+      const header = lines[0].split(",").map(h => h.replace(/"/g, "").trim().toLowerCase());
+      const nameIdx = header.findIndex(h => h.includes("name") || h.includes("id"));
+      const feeIdx = header.findIndex(h => h.includes("fee") || h.includes("pay") || h.includes("rate") || h.includes("amount"));
+      if (nameIdx === -1 || feeIdx === -1) return json(res, 400, { error: "CSV must have Name/ID and Fee/Pay columns" });
+      let saved = 0, skipped = 0;
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(",").map(c => c.replace(/"/g, "").trim());
+        const personName = cols[nameIdx];
+        const amount = parseFloat(cols[feeIdx]) || 0;
+        if (!personName) { skipped++; continue; }
+        // Extract personId from "Name (ID)" format
+        const match = personName.match(/\(([^)]+)\)$/);
+        const personId = match ? match[1] : personName;
+        try {
+          await db.query(
+            \`INSERT INTO public.finance_rates (schedule_id, person_type, person_id, amount)
+             VALUES ($1,$2,$3,$4)
+             ON CONFLICT (schedule_id, person_type, person_id)
+             DO UPDATE SET amount=$4\`,
+            [parseInt(scheduleId), personType, personId, amount]
+          );
+          saved++;
+        } catch(e) { skipped++; }
+      }
+      return json(res, 200, { success: true, saved, skipped });
+    } catch(e) { return json(res, 500, { error: String(e) }); }
+  }
+
   // POST /api/finance/persons - add new person WEF a month
   // ========== FACULTY PORTAL ROUTES ==========
 

@@ -224,7 +224,7 @@ export default function SummaryScreen() {
     },
     homeBtn: {
       flexDirection: "row", alignItems: "center", gap: 6,
-      backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 20,
+      backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 20, borderWidth: 1, borderColor: "rgba(255,255,255,0.4)",
       paddingHorizontal: 12, paddingVertical: 6, alignSelf: "flex-start", marginBottom: 10,
     },
     homeBtnTxt: { color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 13 },
