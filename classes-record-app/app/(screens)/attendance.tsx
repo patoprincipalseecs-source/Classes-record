@@ -395,9 +395,9 @@ export default function AttendanceScreen() {
       return `<tr style="background:${bg}">
         <td>${i+1}</td><td>${r.rollNo}</td><td>${r.name}</td>
         ${cells}
-        <td style="color:#2E7D32">${r.presentCount}</td>
-        <td style="color:#C62828">${r.absentCount}</td>
-        <td style="color:#E65100">${r.leaveCount}</td>
+        <td style="color:#2E7D32">${presentCount}</td>
+        <td style="color:#C62828">${absentCount}</td>
+        <td style="color:#E65100">${leaveCount}</td>
         <td style="color:${pctColor};font-weight:bold">${pct}%</td>
       </tr>`;
     }).join("");
@@ -1015,7 +1015,12 @@ export default function AttendanceScreen() {
                   ))}
                 </View>
                 {roster.rows.map((r, ri) => {
-                  const pct = r.percentage;
+                  const vals = Object.values(r.records ?? {}) as string[];
+                  const presentCount = vals.filter(v => v === 'P').length;
+                  const absentCount  = vals.filter(v => v === 'A').length;
+                  const leaveCount   = vals.filter(v => v === 'L').length;
+                  const total = presentCount + absentCount + leaveCount;
+                  const pct = total > 0 ? Math.round((presentCount / total) * 100) : 0;
                   const pctColor = pct >= 75 ? STATUS_COLORS.P : pct >= 60 ? STATUS_COLORS.L : STATUS_COLORS.A;
                   return (
                     <View key={r.rollNo} style={{ flexDirection: "row", backgroundColor: ri % 2 === 0 ? colors.card : colors.muted }}>
@@ -1029,9 +1034,9 @@ export default function AttendanceScreen() {
                           </View>
                         );
                       })}
-                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.P }}>{r.presentCount}</Text></View>
-                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.A }}>{r.absentCount}</Text></View>
-                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.L }}>{r.leaveCount}</Text></View>
+                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.P }}>{presentCount}</Text></View>
+                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.A }}>{absentCount}</Text></View>
+                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.L }}>{leaveCount}</Text></View>
                       <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: pctColor }}>{pct}%</Text></View>
                     </View>
                   );
