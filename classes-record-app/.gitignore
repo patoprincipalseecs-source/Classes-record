@@ -42,3 +42,9 @@ yarn-error.*
 
 .env
 node_modules/
+.env
+.env.local
+.env.production.local
+.env.production
+server/.env
+.expo/
