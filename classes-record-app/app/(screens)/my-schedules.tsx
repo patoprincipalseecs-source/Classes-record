@@ -652,7 +652,7 @@ export default function MySchedulesScreen() {
             {Platform.OS === "web" ? (
               <input type="date" value={toIso(startDate)}
                 onChange={(e: any) => { const d = new Date(e.target.value); if (!isNaN(d.getTime())) setStartDate(d); }}
-                style={{ width: "100%", padding: "10px 12px", fontSize: 14, borderRadius: 8, border: "1px solid #e0e0e0", marginBottom: 16, fontFamily: "inherit" } as any}
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${colors.border}`, fontSize: 15, fontFamily: "Inter_400Regular", color: colors.foreground, backgroundColor: colors.muted, marginBottom: 10, boxSizing: "border-box" } as any}
               />
             ) : (
               <TouchableOpacity style={[s.datePill, { marginBottom: 16 }]} onPress={() => setPickerTarget("start")}>
@@ -665,7 +665,7 @@ export default function MySchedulesScreen() {
             {Platform.OS === "web" ? (
               <input type="date" value={toIso(endDate)}
                 onChange={(e: any) => { const d = new Date(e.target.value); if (!isNaN(d.getTime())) setEndDate(d); }}
-                style={{ width: "100%", padding: "10px 12px", fontSize: 14, borderRadius: 8, border: "1px solid #e0e0e0", marginBottom: 20, fontFamily: "inherit" } as any}
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${colors.border}`, fontSize: 15, fontFamily: "Inter_400Regular", color: colors.foreground, backgroundColor: colors.muted, marginBottom: 10, boxSizing: "border-box" } as any}
               />
             ) : (
               <TouchableOpacity style={[s.datePill, { marginBottom: 20 }]} onPress={() => setPickerTarget("end")}>
