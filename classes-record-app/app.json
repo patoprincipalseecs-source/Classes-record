@@ -6,17 +6,44 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "classes-record",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.seecs.classesrecord",
+      "versionCode": 1
+    },
     "web": {
-      "favicon": "./assets/images/favicon.png",
-      "bundler": "metro",
-      "build": {
-        "output": "static"
-      }
+      "favicon": "./assets/images/icon.png",
+      "baseUrl": "/"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true,
+      "baseUrl": "/"
     },
     "extra": {
       "eas": {
         "projectId": "77aa2e53-3c43-41e1-afec-a092d7677438"
       }
-    }
+    },
+    "fonts": [
+      "./assets/fonts/Feather.ttf",
+      "./assets/fonts/MaterialIcons.ttf",
+      "./assets/fonts/AntDesign.ttf",
+      "./assets/fonts/FontAwesome.ttf"
+    ]
   }
 }
