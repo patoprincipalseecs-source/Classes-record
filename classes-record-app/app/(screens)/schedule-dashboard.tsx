@@ -28,7 +28,7 @@ export default function ScheduleDashboardScreen() {
   );
 
   const dateParams = startDate ? `&startDate=${startDate}&endDate=${endDate ?? ""}` : "";
-  const timeParams = `&startHour=${startHour ?? "9"}&endHour=${endHour ?? "17"}&activeDays=${encodeURIComponent(activeDays ?? "Mon,Tue,Wed,Thu,Fri")}`;
+  const timeParams = `&startHour=${startHour ?? "9"}&endHour=${endHour ?? "17"}&activeDays=${encodeURIComponent(activeDays ?? "Mon,Tue,Wed,Thu,Fri")}&breakTime=${encodeURIComponent(breakTime ?? "13-14")}`;
   const q = `scheduleId=${scheduleId}&scheduleTitle=${encodeURIComponent(scheduleTitle ?? "")}${publicMode ? "&isPublic=1" : ""}${dateParams}${timeParams}`;
 
   const ALL_TILES = [

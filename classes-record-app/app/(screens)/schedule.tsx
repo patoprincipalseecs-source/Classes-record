@@ -117,7 +117,8 @@ export default function ScheduleScreen() {
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
   const [clipboard, setClipboard] = React.useState<ScheduleRow | null>(null);
-  const { scheduleId: scheduleIdParam, scheduleTitle, startHour: startHourParam, endHour: endHourParam, activeDays: activeDaysParam, isPublic: isPublicParam } = useLocalSearchParams<{ scheduleId?: string; scheduleTitle?: string; startHour?: string; endHour?: string; activeDays?: string; isPublic?: string }>();
+  const { scheduleId: scheduleIdParam, scheduleTitle, startHour: startHourParam, endHour: endHourParam, activeDays: activeDaysParam, isPublic: isPublicParam, breakTime: breakTimeParam } = useLocalSearchParams<{ scheduleId?: string; scheduleTitle?: string; startHour?: string; endHour?: string; activeDays?: string; isPublic?: string; breakTime?: string }>();
+  const breakStartHour = parseInt(String(breakTimeParam||"13-14").split("-")[0]) || 13;
   const isPublicView = isPublicParam === "1";
   const scheduleId = scheduleIdParam ? Number(scheduleIdParam) : undefined;
   const [showSettings, setShowSettings] = React.useState(false);
@@ -369,7 +370,7 @@ export default function ScheduleScreen() {
     };
 
     const rowsHtml = TIME_SLOTS.map((slot) => {
-      const isBreak = slot.hour === 13;
+      const isBreak = slot.hour === breakStartHour;
       const dayMap = gridMap[slot.hour] ?? {};
       return `
         <tr class="${isBreak ? "break-row" : ""}">
@@ -622,7 +623,7 @@ export default function ScheduleScreen() {
           </View>
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}>
             {TIME_SLOTS.map((slot) => {
-              const isBreak = slot.hour === 13;
+              const isBreak = slot.hour === breakStartHour;
               const dayMap = allDaysGrid[slot.hour] ?? {};
               return (
                 <View key={slot.hour} style={[s.gridRow, isBreak && s.gridBreakRow]}>

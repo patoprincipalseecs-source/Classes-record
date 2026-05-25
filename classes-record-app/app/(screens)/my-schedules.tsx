@@ -498,7 +498,7 @@ export default function MySchedulesScreen() {
                 <View key={sch.id} style={[s.card, sch.isPublic && { borderColor: "#1976D2", borderWidth: 1.5 }]}>
                   <TouchableOpacity
                     style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
-                    onPress={() => router.push(`/(screens)/schedule-dashboard?scheduleId=${sch.id}&scheduleTitle=${encodeURIComponent(sch.name)}&startDate=${sch.startDate ?? ""}&endDate=${sch.endDate ?? ""}&startHour=${sch.startHour ?? 9}&endHour=${sch.endHour ?? 17}&activeDays=${encodeURIComponent(sch.activeDays ?? "Mon,Tue,Wed,Thu,Fri")}` as never)}
+                    onPress={() => router.push(`/(screens)/schedule-dashboard?scheduleId=${sch.id}&scheduleTitle=${encodeURIComponent(sch.name)}&startDate=${sch.startDate ?? ""}&endDate=${sch.endDate ?? ""}&startHour=${sch.startHour ?? 9}&endHour=${sch.endHour ?? 17}&activeDays=${encodeURIComponent(sch.activeDays ?? "Mon,Tue,Wed,Thu,Fri")}&breakTime=${encodeURIComponent(sch.breakTime ?? "13-14")}` as never)}
                     activeOpacity={0.75}
                   >
                     <View style={s.cardIcon}>
