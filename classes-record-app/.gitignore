@@ -50,3 +50,4 @@ server/.env
 .expo/
 node_modules/
 .cache/
+node_modules/
