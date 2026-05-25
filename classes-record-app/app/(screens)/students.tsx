@@ -306,7 +306,7 @@ export default function StudentsScreen() {
                     <><Feather name="upload" size={14} color={colors.primary} /><Text style={{ fontSize:13, fontFamily:"Inter_600SemiBold", color:colors.primary }}>{"  Bulk Upload (Excel)"}</Text></>}
                 </TouchableOpacity>
                 <TouchableOpacity style={{ flexDirection:"row", alignItems:"center", justifyContent:"center", gap:6, borderWidth:1, borderColor:"#2E7D32", borderRadius:8, paddingVertical:9, paddingHorizontal:14 }}
-                  onPress={() => Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/attendance/students/sample`)}>
+                  onPress={() => Linking.openURL(`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/attendance/students/sample`)}>
                   <Feather name="download" size={14} color="#2E7D32" />
                   <Text style={{ fontSize:13, fontFamily:"Inter_600SemiBold", color:"#2E7D32" }}>Sample</Text>
                 </TouchableOpacity>

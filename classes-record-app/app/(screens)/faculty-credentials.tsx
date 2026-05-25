@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-import * as ScreenOrientation from "expo-screen-orientation";
+// Web: ScreenOrientation disabled
 
 import { useColors } from "@/hooks/useColors";
 import {
@@ -231,7 +231,7 @@ export default function FacultyCredentialsScreen() {
 
         <TouchableOpacity
           style={[s.toolBtn, { backgroundColor: "#E3F2FD", borderColor: "#1565C0" }]}
-          onPress={() => Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/faculty-access/download?scheduleId=${scheduleId}`)}
+          onPress={() => Linking.openURL(`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/faculty-access/download?scheduleId=${scheduleId}`)}
           disabled={accounts.length === 0}
         >
           <Feather name="download" size={16} color="#1565C0" />

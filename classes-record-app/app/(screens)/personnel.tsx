@@ -71,7 +71,7 @@ export default function PersonnelScreen() {
     queryKey: ["finance-persons", scheduleId, activeTab],
     queryFn: async () => {
       const period = new Date().toISOString().slice(0, 7);
-      const res = await fetch(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/finance/persons?scheduleId=${scheduleId}&personType=${activeTab}&period=${period}`);
+      const res = await fetch(`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/finance/persons?scheduleId=${scheduleId}&personType=${activeTab}&period=${period}`);
       const data = await res.json();
       return Array.isArray(data) ? data : [];
     },
@@ -87,13 +87,13 @@ export default function PersonnelScreen() {
     if (activeTab === "student") {
       // Add student to students table with class
       const [cls, subj] = studentClass.split("|||");
-      res = await fetch(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/attendance/students`, {
+      res = await fetch(`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/attendance/students`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scheduleId, className: cls, rollNo: personName.trim(), name: personName.trim(), email: personEmail.trim(), activeFrom: period }),
       }).then(r => r.json());
       // Also set active_from
-      await fetch(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/finance/persons`, {
+      await fetch(`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/finance/persons`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scheduleId, personType: "student", name: personName.trim(), email: personEmail.trim(), activeFrom: period }),

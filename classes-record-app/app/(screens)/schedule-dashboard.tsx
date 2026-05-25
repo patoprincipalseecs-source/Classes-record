@@ -6,7 +6,7 @@ import {
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as ScreenOrientation from "expo-screen-orientation";
+// Web: ScreenOrientation disabled
 
 import { useColors } from "@/hooks/useColors";
 

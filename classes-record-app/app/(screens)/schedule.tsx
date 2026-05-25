@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect, useLocalSearchParams } from "expo-router";
-import * as ScreenOrientation from "expo-screen-orientation";
+// Web: ScreenOrientation disabled
 import { printOrShareHtml } from "@/utils/printHtml";
 
 import { useColors } from "@/hooks/useColors";
@@ -141,7 +141,7 @@ export default function ScheduleScreen() {
   useFocusEffect(
     useCallback(() => {
       if (Platform.OS !== "web") {
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
+        // ScreenOrientation.lockAsync(// ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
       }
       return () => {
         if (Platform.OS !== "web") {
@@ -797,7 +797,7 @@ export default function ScheduleScreen() {
           variant="primary"
           onImport={(uri, name, mimeType, file) => importScheduleExcel(uri, name, mimeType, scheduleId, file)}
           onSuccess={() => { setShowImport(false); qc.invalidateQueries({ queryKey: ["schedule", scheduleId] }); }}
-          sampleUrl={`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/import/sample/schedule`}
+          sampleUrl={`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/import/sample/schedule`}
           sampleFileName="SampleWeeklySchedule.xlsx"
         />
         <ExcelImportButton

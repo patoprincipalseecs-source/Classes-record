@@ -8,7 +8,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect, useLocalSearchParams } from "expo-router";
-import * as ScreenOrientation from "expo-screen-orientation";
+// Web: ScreenOrientation disabled
 import { printOrShareHtml } from "@/utils/printHtml";
 
 import { useColors } from "@/hooks/useColors";
@@ -51,7 +51,7 @@ export default function MeetingScreen() {
   useFocusEffect(
     useCallback(() => {
       if (Platform.OS !== "web") {
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
+        // ScreenOrientation.lockAsync(// ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
       }
       return () => {
         if (Platform.OS !== "web") {

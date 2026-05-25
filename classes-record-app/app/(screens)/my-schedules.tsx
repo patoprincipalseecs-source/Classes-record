@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
-import * as ScreenOrientation from "expo-screen-orientation";
+// Web: ScreenOrientation disabled
 
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -161,7 +161,7 @@ export default function MySchedulesScreen() {
       setErrorMsg("PIN must be exactly 4 digits (0–9)"); return;
     }
     setLoginLoading(true);
-    const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
+    const API_BASE = `http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api`;
     try {
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",

@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-import * as ScreenOrientation from "expo-screen-orientation";
+// Web: ScreenOrientation disabled
 import * as DocumentPicker from "expo-document-picker";
 
 import { useColors } from "@/hooks/useColors";
@@ -169,7 +169,7 @@ export default function AttendanceScreen() {
   useFocusEffect(
     useCallback(() => {
       if (Platform.OS !== "web") {
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
+        // ScreenOrientation.lockAsync(// ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
       }
       return () => {
         if (Platform.OS !== "web") {
@@ -1095,7 +1095,7 @@ export default function AttendanceScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={s.sampleBtn}
-              onPress={() => Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/attendance/students/sample`)}
+              onPress={() => Linking.openURL(`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/attendance/students/sample`)}
             >
               <Feather name="download" size={13} color={colors.primary} />
               <Text style={s.sampleBtnTxt}>Template</Text>
