@@ -1,12 +1,8 @@
-import { Platform } from 'react-native';
+import React from 'react';
+import { ScrollView, ScrollViewProps } from 'react-native';
 
-// This automatically picks the correct version based on platform
-let KeyboardAwareScrollView: any;
-
-if (Platform.OS === 'web') {
-  KeyboardAwareScrollView = require('./web/KeyboardAwareScrollView.web').KeyboardAwareScrollView;
-} else {
-  KeyboardAwareScrollView = require('./web/KeyboardAwareScrollView.native').KeyboardAwareScrollView;
+export function KeyboardAwareScrollView(props: ScrollViewProps) {
+  return <ScrollView {...props} />;
 }
 
-export { KeyboardAwareScrollView };
+export default KeyboardAwareScrollView;
