@@ -83,6 +83,8 @@ export default function MySchedulesScreen() {
   const [endHour, setEndHour] = useState<number>(17);
   const [activeDays, setActiveDays] = useState<string[]>(["Mon","Tue","Wed","Thu","Fri"]);
   const [pickerTarget, setPickerTarget] = useState<"start" | "end" | null>(null);
+  const [breakStart, setBreakStart] = useState<number>(13);
+  const [breakEnd, setBreakEnd] = useState<number>(14);
 
   const [deleteTarget, setDeleteTarget] = useState<UserSchedule | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -771,7 +773,7 @@ export default function MySchedulesScreen() {
               style={s.sheetBtn}
               onPress={() => {
                 if (newName.trim()) {
-                  createMutation.mutate({ name: newName, sd: toIso(startDate), ed: toIso(endDate), sh: startHour, eh: endHour, ad: activeDays.join(',') });
+                  createMutation.mutate({ name: newName, sd: toIso(startDate), ed: toIso(endDate), sh: startHour, eh: endHour, ad: activeDays.join(','), bt: `${breakStart}-${breakEnd}` });
                 }
               }}
               disabled={createMutation.isPending || !newName.trim()}
@@ -782,9 +784,36 @@ export default function MySchedulesScreen() {
               }
             </TouchableOpacity>
             </View>
+            {/* ── Break Time ── */}
+            <Text style={s.sheetLabel}>Break Time</Text>
+            <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: 8 }}>Select break start and end hour (e.g. 1 PM – 2 PM)</Text>
+            <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: 4 }}>Break Start</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+              <View style={{ flexDirection: "row", gap: 6 }}>
+                {[7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(h => {
+                  const lbl = h===12?"12 PM":h<12?`${h} AM`:`${h-12} PM`;
+                  const on = breakStart===h;
+                  return <TouchableOpacity key={h} onPress={() => { setBreakStart(h); if (breakEnd <= h) setBreakEnd(h+1); }} style={{ paddingHorizontal:10, paddingVertical:6, borderRadius:20, backgroundColor: on ? colors.primary : "transparent", borderWidth:1, borderColor: on ? colors.primary : colors.border }}>
+                    <Text style={{ fontSize:12, color: on ? "#fff" : colors.foreground }}>{lbl}</Text>
+                  </TouchableOpacity>;
+                })}
+              </View>
+            </ScrollView>
+            <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: 4 }}>Break End</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              <View style={{ flexDirection: "row", gap: 6 }}>
+                {[8,9,10,11,12,13,14,15,16,17,18,19,20,21].filter(h => h > breakStart).map(h => {
+                  const lbl = h===12?"12 PM":h<12?`${h} AM`:`${h-12} PM`;
+                  const on = breakEnd===h;
+                  return <TouchableOpacity key={h} onPress={() => setBreakEnd(h)} style={{ paddingHorizontal:10, paddingVertical:6, borderRadius:20, backgroundColor: on ? colors.primary : "transparent", borderWidth:1, borderColor: on ? colors.primary : colors.border }}>
+                    <Text style={{ fontSize:12, color: on ? "#fff" : colors.foreground }}>{lbl}</Text>
+                  </TouchableOpacity>;
+                })}
+              </View>
+            </ScrollView>
             <TouchableOpacity
               style={s.sheetCancel}
-              onPress={() => { setShowCreate(false); setNewName(""); setStartDate(new Date()); setEndDate(new Date()); setStartHour(9); setEndHour(17); setActiveDays(["Mon","Tue","Wed","Thu","Fri"]); }}
+              onPress={() => { setShowCreate(false); setNewName(""); setStartDate(new Date()); setEndDate(new Date()); setStartHour(9); setEndHour(17); setActiveDays(["Mon","Tue","Wed","Thu","Fri"]); setBreakStart(13); setBreakEnd(14); }}
             >
               <Text style={s.sheetCancelTxt}>Cancel</Text>
             </TouchableOpacity>
