@@ -218,20 +218,46 @@ export default function ScheduleGenerator() {
   const breakEnd = 14 * 60;   // 2 PM
 
   const handleUpload = async () => {
+    if (Platform.OS === "web") {
+      // Web: use native file input
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".csv,text/csv";
+      input.onchange = async (e: any) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setFileName(file.name);
+        const text = await file.text();
+        const lines = text.split(/\r?\n/).filter((l: string) => l.trim());
+        if (!lines.length) { setError("Empty file"); return; }
+        const headers = lines[0].split(",").map((h: string) => h.trim().replace(/\r/,"").replace(/"/g,""));
+        const data = lines.slice(1).map((line: string) => {
+          const vals = line.split(",");
+          const obj: Record<string,string> = {};
+          headers.forEach((h: string, i: number) => { obj[h] = (vals[i]||"").trim().replace(/\r/,"").replace(/"/g,""); });
+          return obj;
+        }).filter((r: Record<string,string>) => Object.values(r).some(v => v));
+        setCsvData(data);
+        setGenerated([]);
+        setError("");
+      };
+      input.click();
+      return;
+    }
     try {
       const res = await DocumentPicker.getDocumentAsync({ type: "text/csv" });
       if (res.canceled) return;
-      const uri = res.assets[0].uri;
-      setFileName(res.assets[0].name);
-      // Use fetch to read file - works on both web and native
+      const asset = res.assets?.[0] || (res as any);
+      const uri = asset.uri;
+      setFileName(asset.name || "draft.csv");
       const response = await fetch(uri);
       const text = await response.text();
       const lines = text.split(/\r?\n/).filter(l => l.trim());
-      const headers = lines[0].split(",").map(h => h.trim().replace(/\r/,""));
+      const headers = lines[0].split(",").map(h => h.trim().replace(/\r/,"").replace(/"/g,""));
       const data = lines.slice(1).map(line => {
         const vals = line.split(",");
         const obj: Record<string,string> = {};
-        headers.forEach((h,i) => { obj[h] = (vals[i]||"").trim().replace(/\r/,""); });
+        headers.forEach((h,i) => { obj[h] = (vals[i]||"").trim().replace(/\r/,"").replace(/"/g,""); });
         return obj;
       }).filter(r => Object.values(r).some(v => v));
       setCsvData(data);
