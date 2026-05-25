@@ -4,11 +4,11 @@ import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
   ActivityIndicator, Alert, Modal, ScrollView, Platform,
 } from "react-native";
-import AsyncStorage from "@/lib/webStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
-// Web: ScreenOrientation disabled
+import * as ScreenOrientation from "expo-screen-orientation";
 
 import { useColors } from "@/hooks/useColors";
 import { facultyLogin, changeFacultyPassword, FacultySession } from "@/hooks/useApi";
@@ -108,7 +108,9 @@ export default function FacultyPortalScreen() {
           } else if (saved.username) {
             // Try to get fresh schedule dates via schedule lookup
             try {
-              const API = `https://${process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"}/api`;
+              const API = process.env.EXPO_PUBLIC_DOMAIN
+                ? "https://" + process.env.EXPO_PUBLIC_DOMAIN + "/api"
+                : "https://classes-record.onrender.com/api";
               const r = await fetch(`${API}/schedules?username=patoprincipalseecs@gmail.com`);
               if (r.ok) {
                 const schedules = await r.json();

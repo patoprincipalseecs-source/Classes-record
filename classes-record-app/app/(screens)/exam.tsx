@@ -429,7 +429,7 @@ export default function ExamScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={s.sampleBtn}
-              onPress={() => Linking.openURL(`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/exam/marks/sample`)}
+              onPress={() => Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/exam/marks/sample`)}
             >
               <Feather name="download" size={13} color={colors.primary} />
               <Text style={s.sampleBtnTxt}>Template</Text>

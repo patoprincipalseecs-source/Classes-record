@@ -7,11 +7,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-// Web: Haptics disabled
-const Haptics = { impactAsync: () => app/(screens)/entry.tsx, selectionAsync: () => app/(screens)/entry.tsx };
-import { KeyboardAwareScrollView } from "@/components/KeyboardAwareScrollView";
+import * as Haptics from "expo-haptics";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useRouter, useFocusEffect, useLocalSearchParams } from "expo-router";
-// Web: ScreenOrientation disabled
+import * as ScreenOrientation from "expo-screen-orientation";
 
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -64,7 +63,7 @@ export default function EntryScreen() {
   useFocusEffect(
     useCallback(() => {
       if (Platform.OS !== "web") {
-        // ScreenOrientation.lockAsync(// ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
       }
       return () => {
         if (Platform.OS !== "web") {
@@ -243,7 +242,7 @@ export default function EntryScreen() {
       backgroundColor: "rgba(0,0,0,0.08)", borderRadius: 20,
       paddingHorizontal: 12, paddingVertical: 6, alignSelf: "flex-start", marginBottom: 10,
     },
-    homeBtnTxt: { color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 13 },
+    homeBtnTxt: { color: typeTextColors[type], fontFamily: "Inter_600SemiBold", fontSize: 13 },
     headerTitle: { fontSize: 24, fontFamily: "Inter_700Bold", color: "#fff" },
     headerSub: { fontSize: 13, fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.8)", marginTop: 2 },
     scroll: { padding: 16 },
@@ -252,9 +251,9 @@ export default function EntryScreen() {
       backgroundColor: colors.card, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12,
       borderWidth: 1, borderColor: colors.border, flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     },
-    pickerBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+    pickerBtnActive: { borderColor: colors.primary, backgroundColor: colors.secondary },
     pickerTxt: { fontFamily: "Inter_400Regular", fontSize: 14, color: colors.mutedForeground, flex: 1 },
-    pickerTxtActive: { color: colors.primary, fontFamily: "Inter_600SemiBold" },
+    pickerTxtActive: { color: colors.foreground, fontFamily: "Inter_500Medium" },
     optRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
     optBtn: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card },
     optBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },

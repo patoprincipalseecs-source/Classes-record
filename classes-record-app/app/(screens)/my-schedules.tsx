@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
-// Web: ScreenOrientation disabled
+import * as ScreenOrientation from "expo-screen-orientation";
 
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -78,8 +78,6 @@ export default function MySchedulesScreen() {
   const [fpMsg, setFpMsg] = useState("");
   const [newName, setNewName] = useState("");
   const [startDate, setStartDate] = useState<Date>(new Date());
-  const [breakStart, setBreakStart] = useState<number>(13);
-  const [breakEnd, setBreakEnd]     = useState<number>(14);
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [startHour, setStartHour] = useState<number>(9);
   const [endHour, setEndHour] = useState<number>(17);
@@ -161,7 +159,7 @@ export default function MySchedulesScreen() {
       setErrorMsg("PIN must be exactly 4 digits (0–9)"); return;
     }
     setLoginLoading(true);
-    const API_BASE = `http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api`;
+    const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
     try {
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
@@ -655,11 +653,13 @@ export default function MySchedulesScreen() {
               <View style={[s.datePill, { marginBottom: 16 }]}>
                 <Feather name="calendar" size={15} color={colors.primary} />
                 <TextInput
-                  style={[s.datePillTxt, { color: colors.foreground, outlineStyle: "none", flex:1 } as never]}
+                  style={[s.datePillTxt, { color: colors.foreground, outlineStyle: "none" } as never]}
                   value={toIso(startDate)}
                   onChangeText={(t) => { const d = new Date(t); if (!isNaN(d.getTime())) setStartDate(d); }}
-                  {...{ type: "date" } as any}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={colors.mutedForeground}
                 />
+                <Text style={{ fontSize: 11, color: colors.mutedForeground }}>{fmtDate(toIso(startDate))}</Text>
               </View>
             ) : (
               <TouchableOpacity style={[s.datePill, { marginBottom: 16 }]} onPress={() => setPickerTarget("start")}>
@@ -673,11 +673,13 @@ export default function MySchedulesScreen() {
               <View style={[s.datePill, { marginBottom: 20 }]}>
                 <Feather name="calendar" size={15} color={colors.primary} />
                 <TextInput
-                  style={[s.datePillTxt, { color: colors.foreground, outlineStyle: "none", flex:1 } as never]}
+                  style={[s.datePillTxt, { color: colors.foreground, outlineStyle: "none" } as never]}
                   value={toIso(endDate)}
                   onChangeText={(t) => { const d = new Date(t); if (!isNaN(d.getTime())) setEndDate(d); }}
-                  {...{ type: "date" } as any}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={colors.mutedForeground}
                 />
+                <Text style={{ fontSize: 11, color: colors.mutedForeground }}>{fmtDate(toIso(endDate))}</Text>
               </View>
             ) : (
               <TouchableOpacity style={[s.datePill, { marginBottom: 20 }]} onPress={() => setPickerTarget("end")}>
@@ -750,35 +752,6 @@ export default function MySchedulesScreen() {
               </View>
             </ScrollView>
 
-            {/* ── Break Time ── */}
-            <Text style={s.sheetLabel}>Break Time</Text>
-            <View style={{ flexDirection:"row", gap:8, marginBottom:14 }}>
-              <View style={{ flex:1 }}>
-                <Text style={{ fontSize:11, color:colors.mutedForeground, marginBottom:4 }}>Start</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={{ flexDirection:"row", gap:5 }}>
-                    {[8,9,10,11,12,13,14,15,16,17,18,19].map(h => {
-                      const lbl = h===12?"12 PM":h<12?`${h} AM`:`${h-12} PM`;
-                      const on = breakStart===h;
-                      return <TouchableOpacity key={h} onPress={()=>{ setBreakStart(h); if(breakEnd<=h) setBreakEnd(h+1); }} style={{ paddingHorizontal:10,paddingVertical:6,borderRadius:20,backgroundColor:on?colors.primary:"transparent",borderWidth:1,borderColor:on?colors.primary:colors.border }}><Text style={{ fontSize:12,color:on?"#fff":colors.foreground }}>{lbl}</Text></TouchableOpacity>;
-                    })}
-                  </View>
-                </ScrollView>
-              </View>
-              <View style={{ flex:1 }}>
-                <Text style={{ fontSize:11, color:colors.mutedForeground, marginBottom:4 }}>End</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={{ flexDirection:"row", gap:5 }}>
-                    {[9,10,11,12,13,14,15,16,17,18,19,20].filter(h=>h>breakStart).map(h => {
-                      const lbl = h===12?"12 PM":h<12?`${h} AM`:`${h-12} PM`;
-                      const on = breakEnd===h;
-                      return <TouchableOpacity key={h} onPress={()=>setBreakEnd(h)} style={{ paddingHorizontal:10,paddingVertical:6,borderRadius:20,backgroundColor:on?colors.primary:"transparent",borderWidth:1,borderColor:on?colors.primary:colors.border }}><Text style={{ fontSize:12,color:on?"#fff":colors.foreground }}>{lbl}</Text></TouchableOpacity>;
-                    })}
-                  </View>
-                </ScrollView>
-              </View>
-            </View>
-
             {/* ── Active Days ── */}
             <Text style={s.sheetLabel}>Active Days</Text>
             <View style={{ flexDirection:"row", flexWrap:"wrap", gap:8, marginBottom:20 }}>
@@ -812,7 +785,7 @@ export default function MySchedulesScreen() {
               style={s.sheetBtn}
               onPress={() => {
                 if (newName.trim()) {
-                  createMutation.mutate({ name: newName, sd: toIso(startDate), ed: toIso(endDate), sh: startHour, eh: endHour, ad: activeDays.join(','), bt: `${breakStart}-${breakEnd}` });
+                  createMutation.mutate({ name: newName, sd: toIso(startDate), ed: toIso(endDate), sh: startHour, eh: endHour, ad: activeDays.join(',') });
                 }
               }}
               disabled={createMutation.isPending || !newName.trim()}
@@ -825,41 +798,24 @@ export default function MySchedulesScreen() {
             </View>
             <TouchableOpacity
               style={s.sheetCancel}
-              onPress={() => { setShowCreate(false); setNewName(""); setStartDate(new Date()); setEndDate(new Date()); setStartHour(9); setEndHour(17); setActiveDays(["Mon","Tue","Wed","Thu","Fri"]); setBreakStart(13); setBreakEnd(14); }}
+              onPress={() => { setShowCreate(false); setNewName(""); setStartDate(new Date()); setEndDate(new Date()); setStartHour(9); setEndHour(17); setActiveDays(["Mon","Tue","Wed","Thu","Fri"]); }}
             >
               <Text style={s.sheetCancelTxt}>Cancel</Text>
             </TouchableOpacity>
 
             </ScrollView>
-            {Platform.OS !== 'web' && pickerTarget === "start" && (
+            {pickerTarget === "start" && (
               <DateTimePicker
                 mode="date"
                 value={startDate}
                 onChange={(_, d) => { setPickerTarget(null); if (d) setStartDate(d); }}
               />
             )}
-            {Platform.OS !== 'web' && pickerTarget === "end" && (
+            {pickerTarget === "end" && (
               <DateTimePicker
                 mode="date"
                 value={endDate}
                 onChange={(_, d) => { setPickerTarget(null); if (d) setEndDate(d); }}
-              />
-            )}
-            {Platform.OS === 'web' && pickerTarget !== null && (
-              <input
-                type="date"
-                autoFocus
-                value={pickerTarget === "start" ? startDate.toISOString().split("T")[0] : endDate.toISOString().split("T")[0]}
-                onChange={e => {
-                  if (e.target.value) {
-                    const d = new Date(e.target.value);
-                    if (pickerTarget === "start") setStartDate(d);
-                    else setEndDate(d);
-                  }
-                  setPickerTarget(null);
-                }}
-                onBlur={() => setPickerTarget(null)}
-                style={{ position:"absolute", opacity:0, width:1, height:1 }}
               />
             )}
           </View>

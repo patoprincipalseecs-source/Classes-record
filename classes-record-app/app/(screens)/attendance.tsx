@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-// Web: ScreenOrientation disabled
+import * as ScreenOrientation from "expo-screen-orientation";
 import * as DocumentPicker from "expo-document-picker";
 
 import { useColors } from "@/hooks/useColors";
@@ -169,7 +169,7 @@ export default function AttendanceScreen() {
   useFocusEffect(
     useCallback(() => {
       if (Platform.OS !== "web") {
-        // ScreenOrientation.lockAsync(// ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
       }
       return () => {
         if (Platform.OS !== "web") {
@@ -384,12 +384,7 @@ export default function AttendanceScreen() {
     const dateCols = dates.map(d => `<th>${fmtSlotHtml(d)}</th>`).join("");
     const dataRows = rows.map((r, i) => {
       const bg = i % 2 === 0 ? "#fff" : "#F9FAFB";
-      const vals = Object.values(r.records ?? {}) as string[];
-      const presentCount = vals.filter(v => v === 'P').length;
-      const absentCount  = vals.filter(v => v === 'A').length;
-      const leaveCount   = vals.filter(v => v === 'L').length;
-      const total = presentCount + absentCount + leaveCount;
-      const pct = total > 0 ? Math.round((presentCount / total) * 100) : 0;
+      const pct = r.percentage;
       const pctColor = pct >= 75 ? "#2E7D32" : pct >= 60 ? "#E65100" : "#C62828";
       const cells = dates.map(d => {
         const st = r.records[d] ?? "";
@@ -400,9 +395,9 @@ export default function AttendanceScreen() {
       return `<tr style="background:${bg}">
         <td>${i+1}</td><td>${r.rollNo}</td><td>${r.name}</td>
         ${cells}
-        <td style="color:#2E7D32">${presentCount}</td>
-        <td style="color:#C62828">${absentCount}</td>
-        <td style="color:#E65100">${leaveCount}</td>
+        <td style="color:#2E7D32">${r.presentCount}</td>
+        <td style="color:#C62828">${r.absentCount}</td>
+        <td style="color:#E65100">${r.leaveCount}</td>
         <td style="color:${pctColor};font-weight:bold">${pct}%</td>
       </tr>`;
     }).join("");
@@ -1020,12 +1015,7 @@ export default function AttendanceScreen() {
                   ))}
                 </View>
                 {roster.rows.map((r, ri) => {
-                  const vals = Object.values(r.records ?? {}) as string[];
-                  const presentCount = vals.filter(v => v === 'P').length;
-                  const absentCount  = vals.filter(v => v === 'A').length;
-                  const leaveCount   = vals.filter(v => v === 'L').length;
-                  const total = presentCount + absentCount + leaveCount;
-                  const pct = total > 0 ? Math.round((presentCount / total) * 100) : 0;
+                  const pct = r.percentage;
                   const pctColor = pct >= 75 ? STATUS_COLORS.P : pct >= 60 ? STATUS_COLORS.L : STATUS_COLORS.A;
                   return (
                     <View key={r.rollNo} style={{ flexDirection: "row", backgroundColor: ri % 2 === 0 ? colors.card : colors.muted }}>
@@ -1039,9 +1029,9 @@ export default function AttendanceScreen() {
                           </View>
                         );
                       })}
-                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.P }}>{presentCount}</Text></View>
-                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.A }}>{absentCount}</Text></View>
-                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.L }}>{leaveCount}</Text></View>
+                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.P }}>{r.presentCount}</Text></View>
+                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.A }}>{r.absentCount}</Text></View>
+                      <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: STATUS_COLORS.L }}>{r.leaveCount}</Text></View>
                       <View style={s.rosterStatCell}><Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: pctColor }}>{pct}%</Text></View>
                     </View>
                   );
@@ -1095,7 +1085,7 @@ export default function AttendanceScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={s.sampleBtn}
-              onPress={() => Linking.openURL(`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/attendance/students/sample`)}
+              onPress={() => Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/attendance/students/sample`)}
             >
               <Feather name="download" size={13} color={colors.primary} />
               <Text style={s.sampleBtnTxt}>Template</Text>

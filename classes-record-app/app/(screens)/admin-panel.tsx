@@ -7,12 +7,12 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
-// Web: ScreenOrientation disabled
+import * as ScreenOrientation from "expo-screen-orientation";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useColors } from "@/hooks/useColors";
 
-const API_BASE = `http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api`;
+const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
 const ADMIN_PASSWORD = "Administr@r@123";
 const ADMIN_USERNAME = "patoprincipalseecs@gmail.com";
 

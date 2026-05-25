@@ -6,14 +6,14 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-// Web: ScreenOrientation disabled
+import * as ScreenOrientation from "expo-screen-orientation";
 import { useQuery } from "@tanstack/react-query";
 import { useColors } from "@/hooks/useColors";
 import { studentPortalLogin } from "@/hooks/useApi";
 
 const SESSION_KEY = "STUDENT_PORTAL_SESSION";
 const PHOTO_KEY = "STUDENT_PORTAL_PHOTO_";
-const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com" || "classes-record.onrender.com"}/api`;
+const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"}/api`;
 
 interface StudentSession {
   studentName: string;
@@ -298,7 +298,7 @@ export default function StudentPortalScreen() {
 function AttendanceTab({ session, colors, s }: any) {
   const [data, setData] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const API_BASE2 = `https://${process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com" || "classes-record.onrender.com"}/api`;
+  const API_BASE2 = `https://${process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"}/api`;
 
   React.useEffect(() => {
     fetch(`${API_BASE2}/student-portal/attendance?scheduleId=${session.scheduleId}&rollNo=${encodeURIComponent(session.rollNo)}&className=${encodeURIComponent(session.className)}`)
@@ -343,7 +343,7 @@ function AttendanceTab({ session, colors, s }: any) {
 function FeeTab({ session, colors, s }: any) {
   const [data, setData] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
-  const API_BASE2 = `https://${process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com" || "classes-record.onrender.com"}/api`;
+  const API_BASE2 = `https://${process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"}/api`;
 
   React.useEffect(() => {
     fetch(`${API_BASE2}/finance/student-fee?regNo=${encodeURIComponent(session.rollNo)}`)
@@ -385,7 +385,7 @@ function FeeTab({ session, colors, s }: any) {
 function MarksTab({ session, colors, s }: any) {
   const [data, setData] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const API_BASE2 = `https://${process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com" || "classes-record.onrender.com"}/api`;
+  const API_BASE2 = `https://${process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"}/api`;
 
   React.useEffect(() => {
     fetch(`${API_BASE2}/student-portal/marks?scheduleId=${session.scheduleId}&rollNo=${encodeURIComponent(session.rollNo)}&className=${encodeURIComponent(session.className)}`)

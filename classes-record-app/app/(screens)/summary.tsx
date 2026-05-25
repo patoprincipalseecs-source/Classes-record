@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-// Web: ScreenOrientation disabled
+import * as ScreenOrientation from "expo-screen-orientation";
 import { printOrShareHtml } from "@/utils/printHtml";
 
 import { useColors } from "@/hooks/useColors";
@@ -43,7 +43,7 @@ export default function SummaryScreen() {
   useFocusEffect(
     useCallback(() => {
       if (Platform.OS !== "web") {
-        // ScreenOrientation.lockAsync(// ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
       }
       return () => {
         if (Platform.OS !== "web") {
@@ -224,7 +224,7 @@ export default function SummaryScreen() {
     },
     homeBtn: {
       flexDirection: "row", alignItems: "center", gap: 6,
-      backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 20, borderWidth: 1, borderColor: "rgba(255,255,255,0.4)",
+      backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 20,
       paddingHorizontal: 12, paddingVertical: 6, alignSelf: "flex-start", marginBottom: 10,
     },
     homeBtnTxt: { color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 13 },

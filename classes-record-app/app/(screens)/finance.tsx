@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@/lib/webStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 
 import { useColors } from "@/hooks/useColors";
@@ -266,7 +266,7 @@ export default function FinanceScreen() {
   async function handleBulkStaff() {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "text/csv", "text/comma-separated-values", "application/csv", "*/*"],
+        type: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "*/*"],
         copyToCacheDirectory: true,
       });
       if (result.canceled || !result.assets?.length) return;
@@ -350,14 +350,14 @@ export default function FinanceScreen() {
   async function handleBulkRates(type: "student" | "faculty" | "staff") {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "text/csv", "text/comma-separated-values", "application/csv", "*/*"],
+        type: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "*/*"],
         copyToCacheDirectory: true,
       });
       if (result.canceled || !result.assets?.length) return;
       const asset = result.assets[0];
       setRatesBulkLoading(true);
       const schId = type !== "staff" ? selectedScheduleId : null;
-      const res = await importRatesExcel(asset.uri, asset.name, asset.mimeType ?? "application/octet-stream", schId ?? 0, type);
+      const res = await importRatesExcel(asset.uri, asset.name, asset.mimeType ?? "application/octet-stream", type, schId);
       setRatesBulkLoading(false);
       if (res.success) {
         Alert.alert("Rates Imported", `${res.saved ?? 0} rate(s) saved, ${res.skipped ?? 0} skipped.`);
@@ -515,7 +515,7 @@ export default function FinanceScreen() {
           style={[s.ratesBarBtn, { borderColor: "#00695C" }]}
           onPress={() => {
             const typeParam = type === "student" ? "student" : type === "faculty" ? "faculty" : "staff";
-            Linking.openURL(`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/finance/rates/sample?personType=${typeParam}&scheduleId=${selectedScheduleId ?? ""}`);
+            Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/finance/rates/sample?personType=${typeParam}&scheduleId=${selectedScheduleId ?? ""}`);
           }}
         >
           <Feather name="download" size={13} color="#00695C" />
@@ -776,7 +776,7 @@ export default function FinanceScreen() {
           <TouchableOpacity style={s.bulkBtn} onPress={handleBulkStaff} disabled={bulkLoading}>
             {bulkLoading ? <ActivityIndicator color="#00695C" size="small" /> : <><Feather name="upload" size={15} color="#00695C" /><Text style={s.bulkBtnTxt}>  Bulk Upload Staff (Excel)</Text></>}
           </TouchableOpacity>
-          <TouchableOpacity style={s.sampleBtn} onPress={() => Linking.openURL(`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/finance/staff/sample?scheduleId=${selectedScheduleId ?? ""}`)}>
+          <TouchableOpacity style={s.sampleBtn} onPress={() => Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/finance/staff/sample?scheduleId=${selectedScheduleId ?? ""}`)}>
             <Feather name="download" size={13} color="#00695C" />
             <Text style={s.sampleBtnTxt}>Template</Text>
           </TouchableOpacity>
@@ -1266,7 +1266,7 @@ export default function FinanceScreen() {
                 style={s.sampleBtn}
                 onPress={() => {
                   if (!showRatesModal) return;
-                  Linking.openURL(`http://process.env.EXPO_PUBLIC_DOMAIN || "classes-record.onrender.com"/api/finance/rates/sample?personType=${showRatesModal}&scheduleId=${selectedScheduleId ?? ""}`);
+                  Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/finance/rates/sample?personType=${showRatesModal}&scheduleId=${selectedScheduleId ?? ""}`);
                 }}
               >
                 <Feather name="download" size={13} color="#00695C" />
