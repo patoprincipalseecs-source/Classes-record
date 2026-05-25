@@ -8,7 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { ScrollView as KeyboardAwareScrollView } from "react-native";
 import { useRouter, useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 
