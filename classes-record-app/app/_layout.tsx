@@ -11,7 +11,9 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { KeyboardProvider } from "react-native-keyboard-controller";
+// import { KeyboardProvider } from "react-native-keyboard-controller";
+import { View } from "react-native";
+const KeyboardProvider = ({ children }: { children?: React.ReactNode }) => <View style={{ flex: 1 }}>{children}</View>;
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
