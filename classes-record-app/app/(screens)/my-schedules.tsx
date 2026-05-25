@@ -650,17 +650,10 @@ export default function MySchedulesScreen() {
             <View>
             <Text style={s.sheetLabel}>Start Date</Text>
             {Platform.OS === "web" ? (
-              <View style={[s.datePill, { marginBottom: 16 }]}>
-                <Feather name="calendar" size={15} color={colors.primary} />
-                <TextInput
-                  style={[s.datePillTxt, { color: colors.foreground, outlineStyle: "none" } as never]}
-                  value={toIso(startDate)}
-                  onChangeText={(t) => { const d = new Date(t); if (!isNaN(d.getTime())) setStartDate(d); }}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={colors.mutedForeground}
-                />
-                <Text style={{ fontSize: 11, color: colors.mutedForeground }}>{fmtDate(toIso(startDate))}</Text>
-              </View>
+              <input type="date" value={toIso(startDate)}
+                onChange={(e: any) => { const d = new Date(e.target.value); if (!isNaN(d.getTime())) setStartDate(d); }}
+                style={{ width: "100%", padding: "10px 12px", fontSize: 14, borderRadius: 8, border: "1px solid #e0e0e0", marginBottom: 16, fontFamily: "inherit" } as any}
+              />
             ) : (
               <TouchableOpacity style={[s.datePill, { marginBottom: 16 }]} onPress={() => setPickerTarget("start")}>
                 <Feather name="calendar" size={15} color={colors.primary} />
@@ -670,17 +663,10 @@ export default function MySchedulesScreen() {
 
             <Text style={s.sheetLabel}>End Date</Text>
             {Platform.OS === "web" ? (
-              <View style={[s.datePill, { marginBottom: 20 }]}>
-                <Feather name="calendar" size={15} color={colors.primary} />
-                <TextInput
-                  style={[s.datePillTxt, { color: colors.foreground, outlineStyle: "none" } as never]}
-                  value={toIso(endDate)}
-                  onChangeText={(t) => { const d = new Date(t); if (!isNaN(d.getTime())) setEndDate(d); }}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={colors.mutedForeground}
-                />
-                <Text style={{ fontSize: 11, color: colors.mutedForeground }}>{fmtDate(toIso(endDate))}</Text>
-              </View>
+              <input type="date" value={toIso(endDate)}
+                onChange={(e: any) => { const d = new Date(e.target.value); if (!isNaN(d.getTime())) setEndDate(d); }}
+                style={{ width: "100%", padding: "10px 12px", fontSize: 14, borderRadius: 8, border: "1px solid #e0e0e0", marginBottom: 20, fontFamily: "inherit" } as any}
+              />
             ) : (
               <TouchableOpacity style={[s.datePill, { marginBottom: 20 }]} onPress={() => setPickerTarget("end")}>
                 <Feather name="calendar" size={15} color={colors.primary} />
