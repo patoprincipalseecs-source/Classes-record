@@ -22,6 +22,7 @@ export interface UserSchedule {
   startDate?: string; endDate?: string;
   startHour: number; endHour: number; activeDays: string;
   isPublic: boolean; createdAt: string;
+  breakTime?: string;
 }
 
 export interface SummaryRecord {

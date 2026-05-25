@@ -688,7 +688,7 @@ async function handleApi(method, pathname, req, res) {
         id: s.id, userId: s.user_id, name: s.name,
         startDate: s.start_date, endDate: s.end_date,
         startHour: s.start_hour ?? 9, endHour: s.end_hour ?? 17, activeDays: s.active_days ?? 'Mon,Tue,Wed,Thu,Fri',
-        isPublic: s.is_public, createdAt: s.created_at
+        isPublic: s.is_public, createdAt: s.created_at, breakTime: s.break_time ?? '13-14'
       })));
     } catch (e) { return json(res, 500, { error: e.message }); }
   }
@@ -702,18 +702,18 @@ async function handleApi(method, pathname, req, res) {
         id: s.id, userId: s.user_id, name: s.name,
         startDate: s.start_date, endDate: s.end_date,
         startHour: s.start_hour ?? 9, endHour: s.end_hour ?? 17, activeDays: s.active_days ?? 'Mon,Tue,Wed,Thu,Fri',
-        isPublic: s.is_public, createdAt: s.created_at
+        isPublic: s.is_public, createdAt: s.created_at, breakTime: s.break_time ?? '13-14'
       })));
     } catch (e) { return json(res, 500, { error: e.message }); }
   }
 
   if (method === "POST" && pathname === "/api/schedules") {
-    const { username, name, startDate, endDate, startHour, endHour, activeDays } = body;
+    const { username, name, startDate, endDate, startHour, endHour, activeDays, breakTime } = body;
     if (!username || !name) return json(res, 400, { success: false, message: "username and name required" });
     try {
       const r = await db.query(
-        "INSERT INTO public.schedules (id, user_id, name, start_date, end_date, start_hour, end_hour, active_days) VALUES (nextval('public.schedules_id_seq'), $1, $2, $3, $4, $5, $6, $7) RETURNING *",
-        [username, name, startDate ?? null, endDate ?? null, startHour ?? 9, endHour ?? 17, activeDays ?? 'Mon,Tue,Wed,Thu,Fri']
+        "INSERT INTO public.schedules (id, user_id, name, start_date, end_date, start_hour, end_hour, active_days, break_time) VALUES (nextval('public.schedules_id_seq'), $1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+        [username, name, startDate ?? null, endDate ?? null, startHour ?? 9, endHour ?? 17, activeDays ?? 'Mon,Tue,Wed,Thu,Fri', breakTime ?? '13-14']
       );
       const s = r.rows[0];
       return json(res, 200, { success: true, schedule: {
@@ -1919,6 +1919,7 @@ async function fixSequences() {
     await db.query("ALTER TABLE public.schedules ADD COLUMN IF NOT EXISTS start_hour INTEGER DEFAULT 9");
     await db.query("ALTER TABLE public.schedules ADD COLUMN IF NOT EXISTS end_hour INTEGER DEFAULT 17");
     await db.query("ALTER TABLE public.schedules ADD COLUMN IF NOT EXISTS active_days TEXT DEFAULT 'Mon,Tue,Wed,Thu,Fri'");
+    await db.query("ALTER TABLE public.schedules ADD COLUMN IF NOT EXISTS break_time TEXT DEFAULT '13-14'");
     console.log("\u2713 Schedule columns ensured");
   } catch(e) { console.log("Column migration warning:", e.message); }
 

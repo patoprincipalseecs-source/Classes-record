@@ -113,7 +113,8 @@ export default function MySchedulesScreen() {
             `/(screens)/schedule-generator?scheduleId=${newId}` +
             `&scheduleTitle=${encodeURIComponent(newName)}` +
             `&activeDays=${encodeURIComponent(activeDays.join(','))}` +
-            `&startHour=${startHour}&endHour=${endHour}`
+            `&startHour=${startHour}&endHour=${endHour}` +
+            `&breakStart=${breakStart}&breakEnd=${breakEnd}`
           );
         }
 },

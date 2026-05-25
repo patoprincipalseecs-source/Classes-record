@@ -14,8 +14,8 @@ export default function ScheduleDashboardScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { scheduleId, scheduleTitle, creatorName, isPublic, startDate, endDate, startHour, endHour, activeDays } =
-    useLocalSearchParams<{ scheduleId: string; scheduleTitle: string; creatorName?: string; isPublic?: string; startDate?: string; endDate?: string; startHour?: string; endHour?: string; activeDays?: string }>();
+  const { scheduleId, scheduleTitle, creatorName, isPublic, startDate, endDate, startHour, endHour, activeDays, breakTime } =
+    useLocalSearchParams<{ scheduleId: string; scheduleTitle: string; creatorName?: string; isPublic?: string; startDate?: string; endDate?: string; startHour?: string; endHour?: string; activeDays?: string; breakTime?: string }>();
 
   const publicMode = isPublic === "1";
 

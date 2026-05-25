@@ -214,8 +214,8 @@ export default function ScheduleGenerator() {
   const activeDays = String(params.activeDays||"").split(",").filter(Boolean);
   const startHour = parseInt(String(params.startHour||"9"));
   const endHour = parseInt(String(params.endHour||"17"));
-  const breakStart = 13 * 60; // 1 PM
-  const breakEnd = 14 * 60;   // 2 PM
+  const breakStart = parseInt(String(params.breakStart||"13")) * 60;
+  const breakEnd = parseInt(String(params.breakEnd||"14")) * 60;
 
   const handleUpload = async () => {
     if (Platform.OS === "web") {
