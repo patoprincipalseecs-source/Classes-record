@@ -451,11 +451,11 @@ export async function fetchFinancePersons(scheduleId: number, personType: string
   return Array.isArray(data) ? data : [];
 }
 
-export async function addFinancePerson(scheduleId: number, personType: string, name: string, email: string, activeFrom: string) {
+export async function addFinancePerson(scheduleId: number, personType: string, name: string, email: string, activeFrom: string, designation?: string, salary?: string) {
   const res = await fetch(`${API_BASE}/finance/persons`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scheduleId, personType, name, email, activeFrom }),
+    body: JSON.stringify({ scheduleId, personType, name, email, activeFrom, designation, salary }),
   });
   return res.json();
 }

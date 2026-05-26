@@ -30,6 +30,8 @@ export default function PersonnelScreen() {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
   });
   const [reason, setReason] = useState("");
+  const [designation, setDesignation] = useState("");
+  const [salary, setSalary] = useState("");
   const [studentClass, setStudentClass] = useState("");
   const [studentSubject, setStudentSubject] = useState("");
   const [showClassPicker, setShowClassPicker] = useState(false);
@@ -99,12 +101,12 @@ export default function PersonnelScreen() {
         body: JSON.stringify({ scheduleId, personType: "student", name: personName.trim(), email: personEmail.trim(), activeFrom: period }),
       });
     } else {
-      res = await addFinancePerson(scheduleId, activeTab, personName.trim(), personEmail.trim(), period);
+      res = await addFinancePerson(scheduleId, activeTab, personName.trim(), personEmail.trim(), period, activeTab === "staff" ? designation.trim() : undefined, activeTab === "staff" ? salary.trim() : undefined);
     }
     setLoading(false);
     if (res.success || res.student) {
       setMsg(`✓ ${personName} joined as ${activeTab}${activeTab==="student" ? ` in ${classSubjectMap[studentClass]||studentClass}` : ""} WEF ${effectiveDate}`);
-      setPersonName(""); setPersonEmail(""); setReason(""); setStudentClass(""); setStudentSubject("");
+      setPersonName(""); setPersonEmail(""); setReason(""); setStudentClass(""); setStudentSubject(""); setDesignation(""); setSalary("");
       qc.invalidateQueries({ queryKey: ["finance-persons", scheduleId, activeTab] });
       qc.invalidateQueries({ queryKey: ["students-all", scheduleId] });
     } else { setMsg(res.error || "Failed to add"); }
@@ -264,9 +266,23 @@ export default function PersonnelScreen() {
               <Text style={s.label}>Email (optional)</Text>
               <TextInput style={s.input} placeholder="email@example.com" placeholderTextColor={colors.mutedForeground}
                 value={personEmail} onChangeText={setPersonEmail} autoCapitalize="none" keyboardType="email-address" />
+              {activeTab === "staff" && <>
+                <Text style={s.label}>Designation</Text>
+                <TextInput style={s.input} placeholder="e.g. Security Guard, Peon, Driver"
+                  placeholderTextColor={colors.mutedForeground} value={designation} onChangeText={setDesignation} />
+                <Text style={s.label}>Monthly Salary (Rs)</Text>
+                <TextInput style={s.input} placeholder="e.g. 25000" placeholderTextColor={colors.mutedForeground}
+                  value={salary} onChangeText={setSalary} keyboardType="numeric" />
+              </>}
               <Text style={s.label}>Joining Date (exact)</Text>
-              <TextInput style={s.input} placeholder="YYYY-MM-DD" placeholderTextColor={colors.mutedForeground}
-                value={effectiveDate} onChangeText={setEffectiveDate} />
+              {Platform.OS === "web" ? (
+                <input type="date" value={effectiveDate} onChange={(e: any) => setEffectiveDate(e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px", fontSize: 14, borderRadius: 8, border: "1px solid #e0e0e0", marginBottom: 12, fontFamily: "inherit" } as any}
+                />
+              ) : (
+                <TextInput style={s.input} placeholder="YYYY-MM-DD" placeholderTextColor={colors.mutedForeground}
+                  value={effectiveDate} onChangeText={setEffectiveDate} />
+              )}
               <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginHorizontal: 14, marginBottom: 10 }}>
                 💡 Person will appear in Finance from the month of joining date
               </Text>
