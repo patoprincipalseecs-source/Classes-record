@@ -509,7 +509,7 @@ async function handleApi(method, pathname, req, res) {
     const scheduleId = reqUrl.searchParams.get("scheduleId");
     if (!scheduleId || scheduleId === "undefined" || scheduleId === "[object Object]") return json(res, 200, []);
     try {
-      const r = await db.query("SELECT id, schedule_id, name, role, contact FROM public.support_staff WHERE schedule_id=$1 ORDER BY name", [parseInt(scheduleId)]);
+      const r = await db.query("SELECT id, schedule_id, name, COALESCE(designation,'') as role, COALESCE(email,'') as contact FROM public.support_staff WHERE schedule_id=$1 ORDER BY name", [parseInt(scheduleId)]);
       return json(res, 200, r.rows.map(s => ({ id: s.id, scheduleId: s.schedule_id, name: s.name, role: s.role, contact: s.contact||"" })));
     } catch(e) { return json(res, 200, []); }
   }
