@@ -184,9 +184,10 @@ export default function FinanceScreen() {
     enabled: !!finUser && !!period,
   });
 
-  const { data: staffList = [] } = useQuery({
-    queryKey: ["supportStaff"],
-    queryFn: fetchSupportStaff,
+  const { data: staffList = [], refetch: refetchStaff } = useQuery({
+    queryKey: ["supportStaff", selectedScheduleId],
+    queryFn: () => fetchSupportStaff(selectedScheduleId ?? 0),
+    enabled: !!selectedScheduleId,
     enabled: !!finUser,
   });
 
@@ -388,6 +389,7 @@ export default function FinanceScreen() {
             Alert.alert("Rates Imported", `${result.saved ?? 0} rate(s) saved, ${result.skipped ?? 0} skipped.`);
             const setter = type === "student" ? setStudentRows : type === "faculty" ? setFacultyRows : setStaffPayRows;
             await loadPayRows(type, setter, period);
+            if (type === "staff") refetchStaff();
             if (showRatesModal === type) openRatesModal(type);
           } else { setErrorMsg(result.error ?? "Import failed"); }
         } catch (err: any) { setRatesBulkLoading(false); setErrorMsg("Upload failed: " + err.message); }
