@@ -484,8 +484,8 @@ export async function saveFinancePaymentsBulk(payments: FinancePayment[]) {
   return res.json();
 }
 
-export async function fetchFinanceSummary(scheduleId: number, period: string) {
-  const res = await fetch(`${API_BASE}/finance/summary?scheduleId=${scheduleId}&period=${encodeURIComponent(period)}`);
+export async function fetchFinanceSummary(username: string, period: string) {
+  const res = await fetch(`${API_BASE}/finance/summary?username=${encodeURIComponent(username)}&period=${encodeURIComponent(period)}`);
   return res.json();
 }
 
