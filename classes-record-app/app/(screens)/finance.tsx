@@ -355,6 +355,33 @@ export default function FinanceScreen() {
   }
 
   async function handleBulkRates(type: "student" | "faculty" | "staff") {
+    const schId = type !== "staff" ? selectedScheduleId : null;
+    const doUpload = async (uri: string, name: string, mimeType: string) => {
+      setRatesBulkLoading(true);
+      try {
+        const res = await importRatesExcel(uri, name, mimeType, schId ?? 0, type);
+        setRatesBulkLoading(false);
+        if (res.success) {
+          Alert.alert("Rates Imported", `${res.saved ?? 0} rate(s) saved, ${res.skipped ?? 0} skipped.`);
+          const setter = type === "student" ? setStudentRows : type === "faculty" ? setFacultyRows : setStaffPayRows;
+          await loadPayRows(type, setter, period);
+          if (showRatesModal === type) openRatesModal(type);
+        } else { setRatesBulkLoading(false); setErrorMsg(res.error ?? "Import failed"); }
+      } catch (e: any) { setRatesBulkLoading(false); setErrorMsg("Upload failed: " + e.message); }
+    };
+    if (Platform.OS === "web") {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".xlsx,.xls,.csv";
+      input.onchange = async (e: any) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const uri = URL.createObjectURL(file);
+        await doUpload(uri, file.name, file.type || "application/octet-stream");
+      };
+      input.click();
+      return;
+    }
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "*/*"],
@@ -362,16 +389,7 @@ export default function FinanceScreen() {
       });
       if (result.canceled || !result.assets?.length) return;
       const asset = result.assets[0];
-      setRatesBulkLoading(true);
-      const schId = type !== "staff" ? selectedScheduleId : null;
-      const res = await importRatesExcel(asset.uri, asset.name, asset.mimeType ?? "application/octet-stream", type, schId);
-      setRatesBulkLoading(false);
-      if (res.success) {
-        Alert.alert("Rates Imported", `${res.saved ?? 0} rate(s) saved, ${res.skipped ?? 0} skipped.`);
-        const setter = type === "student" ? setStudentRows : type === "faculty" ? setFacultyRows : setStaffPayRows;
-        await loadPayRows(type, setter, period);
-        if (showRatesModal === type) openRatesModal(type);
-      } else { setErrorMsg(res.error ?? "Import failed"); }
+      await doUpload(asset.uri, asset.name, asset.mimeType ?? "application/octet-stream");
     } catch { setRatesBulkLoading(false); setErrorMsg("Could not pick file"); }
   }
 
@@ -687,6 +705,47 @@ export default function FinanceScreen() {
                   </TouchableOpacity>
                 )}
               </View>
+              {(type === "faculty" || type === "staff") && (
+                <View style={{ flexDirection: "row", gap: 6, paddingHorizontal: 8, paddingBottom: 8, backgroundColor: i % 2 === 0 ? colors.card : colors.muted }}>
+                  <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: status === "Paid" ? "#9E9E9E" : "#2E7D32", borderRadius: 7, paddingVertical: 7, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 5 }}
+                    onPress={async () => {
+                      const setter = type === "faculty" ? setFacultyRows : setStaffPayRows;
+                      const rowsRef = type === "faculty" ? facultyRows : staffPayRows;
+                      const rowIdx = rowsRef.indexOf(row);
+                      updateRow(type, rowIdx, "paidAmount", row.amount);
+                      setSavingRowId(row.personId);
+                      try {
+                        await saveFinancePaymentsBulk([{ personType: type, personName: row.personName, personId: row.personId, scheduleId: selectedScheduleId, period, amount: Number(row.amount)||0, paidAmount: Number(row.amount)||0, status: "Paid", note: "" }]);
+                        await loadPayRows(type, setter, period);
+                        refetchSummary();
+                      } finally { setSavingRowId(null); }
+                    }}
+                    disabled={savingRowId === row.personId}
+                  >
+                    <Feather name="check-circle" size={12} color="#fff" />
+                    <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 11 }}>{status === "Paid" ? "Paid ✓" : "Mark Paid"}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: "#1565C0", borderRadius: 7, paddingVertical: 7, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 5 }}
+                    onPress={async () => {
+                      const setter = type === "faculty" ? setFacultyRows : setStaffPayRows;
+                      const rowsRef = type === "faculty" ? facultyRows : staffPayRows;
+                      const rowIdx = rowsRef.indexOf(row);
+                      setSavingRowId(row.personId);
+                      try {
+                        await saveFinancePaymentsBulk([{ personType: type, personName: row.personName, personId: row.personId, scheduleId: selectedScheduleId, period, amount: Number(row.amount)||0, paidAmount: Number(row.paidAmount)||0, status: payStatus(row.amount, row.paidAmount), note: "" }]);
+                        await loadPayRows(type, setter, period);
+                        refetchSummary();
+                      } finally { setSavingRowId(null); }
+                    }}
+                    disabled={savingRowId === row.personId}
+                  >
+                    <Feather name="save" size={12} color="#fff" />
+                    <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 11 }}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             );
           })}
         </ScrollView>
@@ -770,28 +829,10 @@ export default function FinanceScreen() {
   function renderStaffTab() {
     return (
       <View style={{ flex: 1 }}>
-        <View style={s.addRow}>
-          <TextInput style={[s.addInput, { width: "28%" }]} placeholder="Emp ID" placeholderTextColor={colors.mutedForeground} value={newEmpId} onChangeText={setNewEmpId} />
-          <TextInput style={[s.addInput, { flex: 1 }]} placeholder="Full Name" placeholderTextColor={colors.mutedForeground} value={newName} onChangeText={setNewName} />
-          <TextInput style={[s.addInput, { width: "28%" }]} placeholder="Designation" placeholderTextColor={colors.mutedForeground} value={newDesg} onChangeText={setNewDesg} />
-          <TextInput style={[s.addInput, { width: "28%" }]} placeholder="Department" placeholderTextColor={colors.mutedForeground} value={newDept} onChangeText={setNewDept} />
-          <TouchableOpacity style={s.addBtn} onPress={handleAddStaff} disabled={addingStaff}>
-            {addingStaff ? <ActivityIndicator color="#fff" size="small" /> : <Feather name="user-plus" size={18} color="#fff" />}
-          </TouchableOpacity>
-        </View>
-        <View style={s.bulkRow}>
-          <TouchableOpacity style={s.bulkBtn} onPress={handleBulkStaff} disabled={bulkLoading}>
-            {bulkLoading ? <ActivityIndicator color="#00695C" size="small" /> : <><Feather name="upload" size={15} color="#00695C" /><Text style={s.bulkBtnTxt}>  Bulk Upload Staff (Excel)</Text></>}
-          </TouchableOpacity>
-          <TouchableOpacity style={s.sampleBtn} onPress={() => Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/finance/staff/sample?scheduleId=${selectedScheduleId ?? ""}`)}>
-            <Feather name="download" size={13} color="#00695C" />
-            <Text style={s.sampleBtnTxt}>Template</Text>
-          </TouchableOpacity>
-        </View>
         {renderRatesBar("staff")}
         <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>
-            {staffList.length} staff members · Enter amounts and tap Save All
+            {staffList.length} staff members · Upload template to add staff, then enter amounts
           </Text>
         </View>
         {renderPayTable(staffPayRows, "staff")}
