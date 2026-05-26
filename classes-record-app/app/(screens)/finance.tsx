@@ -172,9 +172,9 @@ export default function FinanceScreen() {
   });
 
   const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = useQuery({
-    queryKey: ["financeSummary", period],
-    queryFn: () => fetchFinanceSummary(period || undefined),
-    enabled: !!finUser,
+    queryKey: ["financeSummary", selectedScheduleId, period],
+    queryFn: () => fetchFinanceSummary(selectedScheduleId ?? 0, period || ""),
+    enabled: !!finUser && !!selectedScheduleId && !!period,
   });
 
   const { data: staffList = [] } = useQuery({
