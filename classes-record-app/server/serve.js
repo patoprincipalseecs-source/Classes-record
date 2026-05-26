@@ -444,14 +444,22 @@ async function handleApi(method, pathname, req, res) {
   }
 
   if (method === "GET" && pathname === "/api/finance/summary") {
-    const scheduleId = reqUrl.searchParams.get("scheduleId");
+    const username = reqUrl.searchParams.get("username");
     const period = reqUrl.searchParams.get("period");
-    if (!scheduleId || !period) return json(res, 200, { student: {}, faculty: {}, staff: {} });
+    if (!period) return json(res, 200, { student: {}, faculty: {}, staff: {} });
     try {
-      const r = await db.query(
-        "SELECT person_type, status, COUNT(*) as cnt, SUM(amount) as total FROM public.finance_payments WHERE schedule_id=$1 AND period=$2 GROUP BY person_type, status",
-        [parseInt(scheduleId), period]
-      );
+      let r;
+      if (username) {
+        r = await db.query(
+          "SELECT fp.person_type, fp.status, COUNT(*) as cnt, SUM(fp.amount) as total FROM public.finance_payments fp JOIN public.schedules s ON fp.schedule_id = s.id WHERE s.user_id=$1 AND fp.period=$2 GROUP BY fp.person_type, fp.status",
+          [username, period]
+        );
+      } else {
+        r = await db.query(
+          "SELECT person_type, status, COUNT(*) as cnt, SUM(amount) as total FROM public.finance_payments WHERE period=$1 GROUP BY person_type, status",
+          [period]
+        );
+      }
       const summary = { student: {}, faculty: {}, staff: {} };
       r.rows.forEach((row) => {
         if (!summary[row.person_type]) summary[row.person_type] = {};
