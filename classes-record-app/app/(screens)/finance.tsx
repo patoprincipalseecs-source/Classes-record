@@ -943,8 +943,8 @@ export default function FinanceScreen() {
       {/* Period picker */}
       {renderPeriodPicker(activeTab === "students")}
 
-      {/* Schedule picker row — students & faculty only */}
-      {(activeTab === "students" || activeTab === "faculty") && (
+      {/* Schedule picker row — students, faculty & summary */}
+      {(activeTab === "students" || activeTab === "faculty" || activeTab === "summary" || activeTab === "staff") && (
         <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 10, paddingVertical: 8, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <TouchableOpacity style={s.scheduleBtn} onPress={() => setShowSchedPicker(true)}>
             <Feather name="briefcase" size={13} color="#00695C" />
