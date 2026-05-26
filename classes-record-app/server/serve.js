@@ -260,12 +260,12 @@ async function handleApi(method, pathname, req, res) {
           // Save rate
           if (sid) {
             await db.query(
-              `INSERT INTO public.finance_rates (schedule_id, person_type, label, amount) VALUES ($1,$2,$3,$4) ON CONFLICT (schedule_id, person_type, label) DO UPDATE SET amount=$4`,
+              `INSERT INTO public.finance_rates (schedule_id, person_type, person_id, label, rate) VALUES ($1,$2,$3,$3,$4) ON CONFLICT ON CONSTRAINT finance_rates_person_type_person_id_schedule_id_key DO UPDATE SET rate=$4, label=$3`,
               [sid, personType, personId, amount]
             );
           } else {
             await db.query(
-              `INSERT INTO public.finance_rates (person_type, label, amount) VALUES ($1,$2,$3) ON CONFLICT (person_type, label) DO UPDATE SET amount=$3 WHERE finance_rates.schedule_id IS NULL`,
+              `INSERT INTO public.finance_rates (person_type, person_id, label, rate) VALUES ($1,$2,$2,$3) ON CONFLICT (person_type, person_id) DO UPDATE SET rate=$3, label=$2`,
               [personType, personId, amount]
             );
           }
@@ -488,7 +488,7 @@ async function handleApi(method, pathname, req, res) {
     const personType = reqUrl.searchParams.get("personType");
     if (!scheduleId || !personType) return json(res, 200, []);
     try {
-      const r = await db.query("SELECT id, schedule_id, person_type, label, amount FROM public.finance_rates WHERE schedule_id=$1 AND person_type=$2 ORDER BY label", [parseInt(scheduleId), personType]);
+      const r = await db.query("SELECT id, schedule_id, person_type, COALESCE(label, person_id) as label, COALESCE(rate, 0) as amount FROM public.finance_rates WHERE schedule_id=$1 AND person_type=$2 ORDER BY label", [parseInt(scheduleId), personType]);
       return json(res, 200, r.rows.map(r => ({ id: r.id, scheduleId: r.schedule_id, personType: r.person_type, label: r.label, amount: parseFloat(r.amount)||0 })));
     } catch(e) { return json(res, 200, []); }
   }
