@@ -486,7 +486,23 @@ export async function saveFinancePaymentsBulk(payments: FinancePayment[]) {
 
 export async function fetchFinanceSummary(username: string, period: string) {
   const res = await fetch(`${API_BASE}/finance/summary?period=${encodeURIComponent(period)}`);
-  return res.json();
+  const raw = await res.json();
+  // Transform {student:{Paid:{count,total}}} → {overall:{...}, byType:{...}}
+  let totalDue = 0, totalPaid = 0, paid = 0, partial = 0, unpaid = 0;
+  const byType: Record<string, any> = {};
+  for (const [type, statuses] of Object.entries(raw as Record<string, any>)) {
+    let typeDue = 0, typePaid = 0, typePaidCount = 0, typePartialCount = 0, typeUnpaidCount = 0;
+    for (const [status, data] of Object.entries(statuses as Record<string, any>)) {
+      const d = data as {count: number, total: number};
+      typeDue += d.total || 0;
+      if (status === "Paid") { typePaid += d.total || 0; typePaidCount += d.count || 0; paid += d.count || 0; }
+      else if (status === "Partial") { typePaid += d.total || 0; typePartialCount += d.count || 0; partial += d.count || 0; }
+      else { typeUnpaidCount += d.count || 0; unpaid += d.count || 0; }
+    }
+    totalDue += typeDue; totalPaid += typePaid;
+    byType[type] = { totalDue: typeDue, totalPaid: typePaid, paid: typePaidCount, partial: typePartialCount, unpaid: typeUnpaidCount };
+  }
+  return { overall: { totalDue, totalPaid, paid, partial, unpaid }, byType };
 }
 
 export async function fetchStudentFeeStatus(regNo: string) {
