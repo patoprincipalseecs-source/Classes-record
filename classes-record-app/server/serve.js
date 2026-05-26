@@ -253,7 +253,7 @@ async function handleApi(method, pathname, req, res) {
           // For staff: also add to support_staff if not exists
           if (personType === "staff" && sid) {
             await db.query(
-              `INSERT INTO public.support_staff (schedule_id, name, role, contact) VALUES ($1,$2,'Staff','') ON CONFLICT DO NOTHING`,
+              `INSERT INTO public.support_staff (schedule_id, name) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
               [sid, personId]
             );
           }
