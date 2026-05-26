@@ -670,7 +670,7 @@ export default function FinanceScreen() {
             const balance = Number(row.amount) - Number(row.paidAmount);
             const status = payStatus(row.amount, row.paidAmount);
             return (
-              <View key={row.personId} style={[s.tableRow, { backgroundColor: i % 2 === 0 ? colors.card : colors.muted }]}>
+              <React.Fragment key={row.personId}><View style={[s.tableRow, { backgroundColor: i % 2 === 0 ? colors.card : colors.muted }]}>
                 <Text style={s.tdNum}>{i + 1}</Text>
                 <View style={s.tdName}>
                   <Text style={s.tdNameTxt} numberOfLines={1}>{row.personName}</Text>
@@ -746,6 +746,7 @@ export default function FinanceScreen() {
                   </TouchableOpacity>
                 </View>
               )}
+              </React.Fragment>
             );
           })}
         </ScrollView>
