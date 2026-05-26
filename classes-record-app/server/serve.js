@@ -250,13 +250,7 @@ async function handleApi(method, pathname, req, res) {
         const personId = match ? match[1] : personName;
         try {
           const sid = scheduleId ? parseInt(scheduleId) : null;
-          // For staff: also add to support_staff if not exists
-          if (personType === "staff" && sid) {
-            await db.query(
-              `INSERT INTO public.support_staff (schedule_id, name) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
-              [sid, personId]
-            );
-          }
+          // Staff members come from HR Portal - only update rates
           // Save rate
           if (sid) {
             await db.query(
@@ -1308,37 +1302,55 @@ async function handleApi(method, pathname, req, res) {
   if (method === "GET" && pathname === "/api/finance/rates/sample") {
     const personType = reqUrl.searchParams.get("personType") || "student";
     const scheduleId = reqUrl.searchParams.get("scheduleId");
+    const period = reqUrl.searchParams.get("period") || "";
+    const amtCol = personType === "student" ? "Fee (Rs)" : "Pay (Rs)";
     let csv = "";
     try {
+      // Get existing rates
+      const ratesMap = {};
+      if (scheduleId) {
+        const rr = await db.query("SELECT COALESCE(label,person_id) as name, COALESCE(rate,0) as rate FROM public.finance_rates WHERE schedule_id=$1 AND person_type=$2", [parseInt(scheduleId), personType]);
+        rr.rows.forEach(r => { ratesMap[r.name] = parseFloat(r.rate)||0; });
+      }
+      // Get existing payments for period
+      const paidMap = {};
+      if (scheduleId && period) {
+        const pr = await db.query("SELECT person_name, COALESCE(amount,0) as amount, COALESCE(paid_amount,0) as paid FROM public.finance_payments WHERE schedule_id=$1 AND person_type=$2 AND period=$3", [parseInt(scheduleId), personType, period]);
+        pr.rows.forEach(p => { paidMap[p.person_name] = { amount: parseFloat(p.amount)||0, paid: parseFloat(p.paid)||0 }; });
+      }
+      csv = `Name / ID,${amtCol},Paid (Rs),Balance (Rs)\n`;
       if (personType === "student" && scheduleId) {
-        const r = await db.query("SELECT roll_no, name, email FROM public.students WHERE schedule_id=$1 ORDER BY roll_no", [parseInt(scheduleId)]);
-        csv = "Name / ID,Fee (Rs),Email,WhatsApp\n";
+        const r = await db.query("SELECT roll_no, name FROM public.students WHERE schedule_id=$1 ORDER BY roll_no", [parseInt(scheduleId)]);
         if (r.rows.length > 0) {
-          r.rows.forEach(s => { csv += `"${s.name} (${s.roll_no})",0,"${s.email||""}",""\n`; });
-        } else {
-          csv += "Ali Khan (2K24-001),15000,ali.khan@example.com,03001234567\n";
-        }
+          r.rows.forEach(s => {
+            const key = `${s.name} (${s.roll_no})`;
+            const rate = ratesMap[key] || ratesMap[s.name] || 0;
+            const paid = paidMap[key] || paidMap[s.name] || { amount: rate, paid: 0 };
+            csv += `"${key}",${paid.amount||rate},${paid.paid},${(paid.amount||rate)-paid.paid}\n`;
+          });
+        } else { csv += `Ali Khan (2K24-001),15000,0,15000\n`; }
       } else if (personType === "faculty" && scheduleId) {
         const r = await db.query("SELECT DISTINCT faculty FROM public.weekly_schedule WHERE schedule_id=$1 AND faculty != '_locations_' AND (type IS NULL OR type='') ORDER BY faculty", [parseInt(scheduleId)]);
-        csv = "Name / ID,Pay (Rs),Email,WhatsApp\n";
         if (r.rows.length > 0) {
-          r.rows.filter(f => f.faculty).forEach(f => { csv += `"${f.faculty}",0,"",""\n`; });
-        } else {
-          csv += "Dr. Ahmad Shah,80000,ahmad.shah@university.edu,03001234567\n";
-        }
+          r.rows.filter(f => f.faculty).forEach(f => {
+            const rate = ratesMap[f.faculty] || 0;
+            const paid = paidMap[f.faculty] || { amount: rate, paid: 0 };
+            csv += `"${f.faculty}",${paid.amount||rate},${paid.paid},${(paid.amount||rate)-paid.paid}\n`;
+          });
+        } else { csv += `Dr. Ahmad Shah,80000,0,80000\n`; }
       } else if (personType === "staff" && scheduleId) {
-        const r = await db.query("SELECT name, role, contact FROM public.support_staff WHERE schedule_id=$1 ORDER BY name", [parseInt(scheduleId)]);
-        csv = "Name / ID,Pay (Rs),Email,WhatsApp\n";
+        const r = await db.query("SELECT name FROM public.support_staff WHERE schedule_id=$1 ORDER BY name", [parseInt(scheduleId)]);
         if (r.rows.length > 0) {
-          r.rows.forEach(s => { csv += `"${s.name}",0,"","${s.contact||""}"\n`; });
-        } else {
-          csv += "John Security,25000,john@example.com,03001234567\n";
-        }
+          r.rows.forEach(s => {
+            const rate = ratesMap[s.name] || 0;
+            const paid = paidMap[s.name] || { amount: rate, paid: 0 };
+            csv += `"${s.name}",${paid.amount||rate},${paid.paid},${(paid.amount||rate)-paid.paid}\n`;
+          });
+        } else { csv += `John Security,25000,0,25000\n`; }
       } else {
-        if (personType === "student") csv = "Name / ID,Fee (Rs),Email,WhatsApp\nAli Khan (2K24-001),15000,ali.khan@example.com,03001234567\n";
-        else csv = "Name / ID,Pay (Rs),Email,WhatsApp\nDr. Ahmad Shah,80000,ahmad.shah@university.edu,03001234567\n";
+        csv += personType === "student" ? `Ali Khan (2K24-001),15000,0,15000\n` : `Dr. Ahmad Shah,80000,0,80000\n`;
       }
-    } catch(e) { csv = "Name / ID,Fee (Rs),Email,WhatsApp\n"; }
+    } catch(e) { csv = `Name / ID,${amtCol},Paid (Rs),Balance (Rs)\n`; }
     res.writeHead(200, { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename=${personType}-rates-template.csv`, "Access-Control-Allow-Origin": "*" });
     res.end(csv); return;
   }

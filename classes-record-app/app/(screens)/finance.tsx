@@ -208,11 +208,13 @@ export default function FinanceScreen() {
       for (const p of payments) payMap[p.personId] = p;
       const rateMap: Record<string, string> = {};
       for (const r of rates) rateMap[r.personId] = String(r.amount);
+      const staffRateMap: Record<string, string> = {};
+      for (const r of rates) staffRateMap[(r as any).label || r.personId] = String(r.amount);
       setter(staff.map(s => ({
         personId: String(s.id), personName: s.name,
-        amount: payMap[String(s.id)]?.amount ?? rateMap[String(s.id)] ?? "0",
-        paidAmount: payMap[String(s.id)]?.paidAmount ?? "0",
-        notes: payMap[String(s.id)]?.notes ?? "",
+        amount: String(payMap[s.name]?.amount ?? staffRateMap[s.name] ?? "0"),
+        paidAmount: String(payMap[s.name]?.paidAmount ?? "0"),
+        notes: payMap[s.name]?.notes ?? payMap[s.name]?.note ?? "",
         dirty: false,
       })));
     } else if (selectedScheduleId != null) {
@@ -224,10 +226,10 @@ export default function FinanceScreen() {
       const payMap: Record<string, FinancePayment> = {};
       for (const p of payments) payMap[p.personName] = p;
       const rateMap: Record<string, string> = {};
-      for (const r of rates) rateMap[r.personId] = String(r.amount);
+      for (const r of rates) rateMap[(r as any).label || r.personId] = String(r.amount);
       setter(persons.map(p => ({
         personId: p.personId, personName: p.personName,
-        amount: String(payMap[p.personName]?.amount ?? rateMap[p.personId] ?? "0"),
+        amount: String(payMap[p.personName]?.amount ?? rateMap[p.personName] ?? rateMap[p.personId] ?? "0"),
         paidAmount: String(payMap[p.personName]?.paidAmount ?? "0"),
         notes: payMap[p.personName]?.notes ?? payMap[p.personName]?.note ?? "",
         dirty: false,
@@ -555,7 +557,7 @@ export default function FinanceScreen() {
           style={[s.ratesBarBtn, { borderColor: "#00695C" }]}
           onPress={() => {
             const typeParam = type === "student" ? "student" : type === "faculty" ? "faculty" : "staff";
-            Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/finance/rates/sample?personType=${typeParam}&scheduleId=${selectedScheduleId ?? ""}`);
+            Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/finance/rates/sample?personType=${typeParam}&scheduleId=${selectedScheduleId ?? ""}&period=${encodeURIComponent(period||"")}`);
           }}
         >
           <Feather name="download" size={13} color="#00695C" />
@@ -1330,7 +1332,7 @@ export default function FinanceScreen() {
                 style={s.sampleBtn}
                 onPress={() => {
                   if (!showRatesModal) return;
-                  Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/finance/rates/sample?personType=${showRatesModal}&scheduleId=${selectedScheduleId ?? ""}`);
+                  Linking.openURL(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/finance/rates/sample?personType=${showRatesModal}&scheduleId=${selectedScheduleId ?? ""}&period=${encodeURIComponent(period||"")}`);
                 }}
               >
                 <Feather name="download" size={13} color="#00695C" />
