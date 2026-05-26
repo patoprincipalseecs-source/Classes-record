@@ -319,7 +319,7 @@ export default function FinanceScreen() {
     setRatesLoading(true);
     setShowRatesModal(type);
     try {
-      const schId = type !== "staff" ? selectedScheduleId : null;
+      const schId = selectedScheduleId;
       const [rates, persons] = await Promise.all([
         fetchFinanceRates(type, schId),
         type === "staff"
@@ -344,7 +344,7 @@ export default function FinanceScreen() {
     const dirty = rateRows.filter(r => r.dirty);
     if (!dirty.length) { Alert.alert("No Changes", "No rate changes to save."); return; }
     setSavingRates(true);
-    const schId = type !== "staff" ? selectedScheduleId : null;
+    const schId = selectedScheduleId;
     await saveFinanceRatesBulk(dirty.map(r => ({
       personType: type, personId: r.personId, scheduleId: schId, rate: Number(r.rate),
     })));
@@ -356,7 +356,7 @@ export default function FinanceScreen() {
   }
 
   async function handleBulkRates(type: "student" | "faculty" | "staff") {
-    const schId = type !== "staff" ? selectedScheduleId : null;
+    const schId = selectedScheduleId;
     const doUpload = async (uri: string, name: string, mimeType: string) => {
       setRatesBulkLoading(true);
       try {
