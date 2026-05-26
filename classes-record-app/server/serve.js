@@ -409,7 +409,11 @@ async function handleApi(method, pathname, req, res) {
       if (personType === "faculty") {
         await db.query("INSERT INTO public.finance_faculty (schedule_id, name, email, active_from) VALUES ($1,$2,$3,$4) ON CONFLICT (schedule_id, name) DO UPDATE SET active_from=$4, active_to=NULL, email=$3", [scheduleId, name, email||"", activeFrom||null]);
       } else if (personType === "staff") {
-        await db.query("INSERT INTO public.support_staff (schedule_id, name, role, email, active_from) VALUES ($1,$2,'Staff',$3,$4)", [scheduleId, name, email||"", activeFrom||null]);
+        const { designation, salary } = body;
+        await db.query("INSERT INTO public.support_staff (schedule_id, name, designation, email, active_from) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (schedule_id, name) DO UPDATE SET designation=$3, email=$4", [scheduleId, name, designation||"", email||"", activeFrom||null]);
+        if (salary && parseFloat(salary) > 0) {
+          await db.query("INSERT INTO public.finance_rates (schedule_id, person_type, person_id, label, rate) VALUES ($1,'staff',$2,$2,$3) ON CONFLICT ON CONSTRAINT finance_rates_person_type_person_id_schedule_id_key DO UPDATE SET rate=$3, label=$2", [scheduleId, name, parseFloat(salary)||0]);
+        }
       } else if (personType === "student") {
         await db.query("UPDATE public.students SET active_from=$1, active_to=NULL WHERE schedule_id=$2 AND roll_no=$3", [activeFrom||null, scheduleId, name]);
       }
@@ -512,7 +516,7 @@ async function handleApi(method, pathname, req, res) {
     const { scheduleId, name, role, contact } = body;
     if (!scheduleId || !name) return json(res, 400, { error: "scheduleId and name required" });
     try {
-      const r = await db.query("INSERT INTO public.support_staff (schedule_id, name, role, contact) VALUES ($1,$2,$3,$4) RETURNING id", [scheduleId, name, role||"", contact||""]);
+      const r = await db.query("INSERT INTO public.support_staff (schedule_id, name, designation, email) VALUES ($1,$2,$3,$4) ON CONFLICT (schedule_id, name) DO NOTHING RETURNING id", [scheduleId, name, role||"", contact||""]);
       return json(res, 200, { success: true, id: r.rows[0].id });
     } catch(e) { return json(res, 500, { error: String(e) }); }
   }
@@ -1360,7 +1364,7 @@ async function handleApi(method, pathname, req, res) {
     let csv = "Name,Role,Pay (Rs),Contact,Email,WhatsApp\n";
     try {
       if (scheduleId) {
-        const r = await db.query("SELECT name, role, contact FROM public.support_staff WHERE schedule_id=$1 ORDER BY name", [parseInt(scheduleId)]);
+        const r = await db.query("SELECT name, COALESCE(designation,'') as role, COALESCE(email,'') as contact FROM public.support_staff WHERE schedule_id=$1 ORDER BY name", [parseInt(scheduleId)]);
         if (r.rows.length > 0) {
           r.rows.forEach(s => { csv += `"${s.name}","${s.role||""}",0,"${s.contact||""}","",""\n`; });
         } else {
