@@ -183,7 +183,7 @@ async function handleApi(method, pathname, req, res) {
         const r = await db.query("SELECT DISTINCT faculty FROM public.weekly_schedule WHERE schedule_id=$1 AND faculty != '_locations_' AND (type IS NULL OR type='') ORDER BY faculty", [parseInt(scheduleId)]);
         rows = r.rows.filter(x => x.faculty).map((x) => ({ personId: x.faculty, personName: x.faculty }));
       } else if (personType === "staff") {
-        const r = await db.query("SELECT id, name FROM public.support_staff WHERE schedule_id=$1 ORDER BY name", [parseInt(scheduleId)]);
+        const r = await db.query("SELECT id, name FROM public.support_staff WHERE schedule_id=$1 AND (active_to IS NULL OR active_to > NOW()) ORDER BY name", [parseInt(scheduleId)]);
         rows = r.rows.map((x) => ({ personId: String(x.id), personName: x.name }));
       }
       return json(res, 200, rows);
@@ -507,7 +507,7 @@ async function handleApi(method, pathname, req, res) {
     const scheduleId = reqUrl.searchParams.get("scheduleId");
     if (!scheduleId || scheduleId === "undefined" || scheduleId === "[object Object]") return json(res, 200, []);
     try {
-      const r = await db.query("SELECT id, schedule_id, name, COALESCE(designation,'') as role, COALESCE(email,'') as contact FROM public.support_staff WHERE schedule_id=$1 ORDER BY name", [parseInt(scheduleId)]);
+      const r = await db.query("SELECT id, schedule_id, name, COALESCE(designation,'') as role, COALESCE(email,'') as contact FROM public.support_staff WHERE schedule_id=$1 AND (active_to IS NULL OR active_to > NOW()) ORDER BY name", [parseInt(scheduleId)]);
       return json(res, 200, r.rows.map(s => ({ id: s.id, scheduleId: s.schedule_id, name: s.name, role: s.role, contact: s.contact||"" })));
     } catch(e) { return json(res, 200, []); }
   }
@@ -1343,7 +1343,7 @@ async function handleApi(method, pathname, req, res) {
           });
         } else { csv += `Dr. Ahmad Shah,80000,0,80000\n`; }
       } else if (personType === "staff" && scheduleId) {
-        const r = await db.query("SELECT name FROM public.support_staff WHERE schedule_id=$1 ORDER BY name", [parseInt(scheduleId)]);
+        const r = await db.query("SELECT name FROM public.support_staff WHERE schedule_id=$1 AND (active_to IS NULL OR active_to > NOW()) ORDER BY name", [parseInt(scheduleId)]);
         if (r.rows.length > 0) {
           r.rows.forEach(s => {
             const rate = ratesMap[s.name] || 0;
