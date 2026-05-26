@@ -248,12 +248,13 @@ async function handleApi(method, pathname, req, res) {
         const match = personName.match(/\(([^)]+)\)$/);
         const personId = match ? match[1] : personName;
         try {
+          const sid = scheduleId ? parseInt(scheduleId) : null;
           await db.query(
-            `INSERT INTO public.finance_rates (schedule_id, person_type, person_id, amount)
+            `INSERT INTO public.finance_rates (schedule_id, person_type, label, amount)
              VALUES ($1,$2,$3,$4)
-             ON CONFLICT (schedule_id, person_type, person_id)
+             ON CONFLICT (schedule_id, person_type, label)
              DO UPDATE SET amount=$4`,
-            [parseInt(scheduleId), personType, personId, amount]
+            [sid, personType, personId, amount]
           );
           saved++;
         } catch(e) { skipped++; }

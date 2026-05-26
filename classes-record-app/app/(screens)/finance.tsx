@@ -376,8 +376,21 @@ export default function FinanceScreen() {
       input.onchange = async (e: any) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        const uri = URL.createObjectURL(file);
-        await doUpload(uri, file.name, file.type || "application/octet-stream");
+        setRatesBulkLoading(true);
+        try {
+          const text = await file.text();
+          const domain = process.env.EXPO_PUBLIC_DOMAIN || "classes-record-5azb.onrender.com";
+          const url = `https://${domain}/api/finance/rates/import?scheduleId=${schId ?? ""}&personType=${encodeURIComponent(type)}`;
+          const res = await fetch(url, { method: "POST", headers: { "Content-Type": "text/plain" }, body: text });
+          const result = await res.json();
+          setRatesBulkLoading(false);
+          if (result.success) {
+            Alert.alert("Rates Imported", `${result.saved ?? 0} rate(s) saved, ${result.skipped ?? 0} skipped.`);
+            const setter = type === "student" ? setStudentRows : type === "faculty" ? setFacultyRows : setStaffPayRows;
+            await loadPayRows(type, setter, period);
+            if (showRatesModal === type) openRatesModal(type);
+          } else { setErrorMsg(result.error ?? "Import failed"); }
+        } catch (err: any) { setRatesBulkLoading(false); setErrorMsg("Upload failed: " + err.message); }
       };
       input.click();
       return;
