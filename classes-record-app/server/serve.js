@@ -249,13 +249,25 @@ async function handleApi(method, pathname, req, res) {
         const personId = match ? match[1] : personName;
         try {
           const sid = scheduleId ? parseInt(scheduleId) : null;
-          await db.query(
-            `INSERT INTO public.finance_rates (schedule_id, person_type, label, amount)
-             VALUES ($1,$2,$3,$4)
-             ON CONFLICT (schedule_id, person_type, label)
-             DO UPDATE SET amount=$4`,
-            [sid, personType, personId, amount]
-          );
+          // For staff: also add to support_staff if not exists
+          if (personType === "staff" && sid) {
+            await db.query(
+              `INSERT INTO public.support_staff (schedule_id, name, role, contact) VALUES ($1,$2,'Staff','') ON CONFLICT DO NOTHING`,
+              [sid, personId]
+            );
+          }
+          // Save rate
+          if (sid) {
+            await db.query(
+              `INSERT INTO public.finance_rates (schedule_id, person_type, label, amount) VALUES ($1,$2,$3,$4) ON CONFLICT (schedule_id, person_type, label) DO UPDATE SET amount=$4`,
+              [sid, personType, personId, amount]
+            );
+          } else {
+            await db.query(
+              `INSERT INTO public.finance_rates (person_type, label, amount) VALUES ($1,$2,$3) ON CONFLICT (person_type, label) DO UPDATE SET amount=$3 WHERE finance_rates.schedule_id IS NULL`,
+              [personType, personId, amount]
+            );
+          }
           saved++;
         } catch(e) { skipped++; }
       }
