@@ -121,7 +121,8 @@ function hourLabel(h) {
 async function handleApi(method, pathname, req, res) {
   const reqUrl = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
   const isMultipart = (req.headers["content-type"]||"").includes("multipart/form-data");
-  const body = (method === "POST" || method === "PATCH") && !isMultipart ? await readBody(req) : {};
+  const isRatesImport = pathname === "/api/finance/rates/import";
+  const body = (method === "POST" || method === "PATCH") && !isMultipart && !isRatesImport ? await readBody(req) : {};
 
   if (method === "OPTIONS") { cors(res); res.writeHead(204); res.end(); return; }
   cors(res);
