@@ -199,7 +199,7 @@ async function handleApi(method, pathname, req, res) {
         "SELECT id, person_type, person_name, schedule_id, period, amount, COALESCE(paid_amount,0) as paid_amount, status, note FROM public.finance_payments WHERE schedule_id=$1 AND person_type=$2 AND period=$3 ORDER BY person_name",
         [parseInt(scheduleId), personType, period]
       );
-      return json(res, 200, r.rows.map(p => ({ id: p.id, personType: p.person_type, personName: p.person_name, scheduleId: p.schedule_id, period: p.period, amount: parseFloat(p.amount)||0, status: p.status, note: p.note||"" })));
+      return json(res, 200, r.rows.map(p => ({ id: p.id, personType: p.person_type, personName: p.person_name, personId: p.person_name, scheduleId: p.schedule_id, period: p.period, amount: parseFloat(p.amount)||0, paidAmount: parseFloat(p.paid_amount)||0, status: p.status, note: p.note||"", notes: p.note||"" })));
     } catch(e) { return json(res, 200, []); }
   }
 

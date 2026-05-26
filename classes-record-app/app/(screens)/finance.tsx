@@ -214,14 +214,14 @@ export default function FinanceScreen() {
         fetchFinanceRates(selectedScheduleId, type),
       ]);
       const payMap: Record<string, FinancePayment> = {};
-      for (const p of payments) payMap[p.personId] = p;
+      for (const p of payments) payMap[p.personName] = p;
       const rateMap: Record<string, string> = {};
       for (const r of rates) rateMap[r.personId] = String(r.amount);
       setter(persons.map(p => ({
         personId: p.personId, personName: p.personName,
-        amount: String(payMap[p.personId]?.amount ?? rateMap[p.personId] ?? "0"),
-        paidAmount: String(payMap[p.personId]?.paidAmount ?? "0"),
-        notes: payMap[p.personId]?.notes ?? "",
+        amount: String(payMap[p.personName]?.amount ?? rateMap[p.personId] ?? "0"),
+        paidAmount: String(payMap[p.personName]?.paidAmount ?? "0"),
+        notes: payMap[p.personName]?.notes ?? payMap[p.personName]?.note ?? "",
         dirty: false,
       })));
     }
