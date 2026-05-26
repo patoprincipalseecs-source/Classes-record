@@ -270,7 +270,7 @@ async function handleApi(method, pathname, req, res) {
             );
           }
           saved++;
-        } catch(e) { skipped++; }
+        } catch(e) { console.error('SKIP ERR:', personId, amount, e.message); skipped++; }
       }
       return json(res, 200, { success: true, saved, skipped });
     } catch(e) { return json(res, 500, { error: String(e) }); }
