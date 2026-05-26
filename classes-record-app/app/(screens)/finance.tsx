@@ -171,6 +171,13 @@ export default function FinanceScreen() {
     enabled: !!finUser,
   });
 
+  // Auto-select first schedule when schedules load
+  React.useEffect(() => {
+    if (schedules.length > 0 && selectedScheduleId == null) {
+      setSelectedScheduleId(schedules[0].id);
+    }
+  }, [schedules, selectedScheduleId]);
+
   const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = useQuery({
     queryKey: ["financeSummary", selectedScheduleId, period],
     queryFn: () => fetchFinanceSummary(selectedScheduleId ?? 0, period || ""),
